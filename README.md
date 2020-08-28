@@ -1,3 +1,16 @@
 # Xtreme3D Editor
 
-Work in progress!
+Scene editor for Xtreme3D 3.8+. Work in progress!
+
+## Prerequisites
+- Python 2.7
+
+## Run
+```
+python editor.py
+```
+
+## Build standalone
+```
+python setup.py build
+```

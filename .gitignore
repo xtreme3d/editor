@@ -103,3 +103,6 @@ venv.bak/
 # CEF
 blob_storage/
 webrtc_event_logs/
+
+# Utility scripts
+*.bat
