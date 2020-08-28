@@ -4,10 +4,38 @@ import os.path
 import math
 import time
 import ctypes
+import Tkinter, tkFileDialog
 import sdl2
 from framework import *
 from framework import keycodes
 from pluginbase import PluginBase
+
+root = Tkinter.Tk()
+root.withdraw()
+
+supportedFiles = [
+    ('All files', '*.*'),
+    ('Quake 3 BSP', '*.bsp'),
+    ('Blitz3D B3D', '*.b3d'),
+    ('LODka3D LOD', '*.lod'),
+    ('Direct3D X', '*.x'),
+    ('Cartography Shop 4 CSM', '*.csm'),
+    ('Pulsar LMTools LMTS', '*.lmts'),
+    ('DeleD DXS', '*.dxs'),
+    ('Autodesk 3DS', '*.3ds'),
+    ('Autodesk ASE', '*.ase'),
+    ('Wavefront OBJ', '*.obj'),
+    ('Lightwave LWO', '*.lwo'),
+    ('Milkshape MS3D', '*.ms3d'),
+    ('FSRad OCT', '*.oct'),
+    ('AMD NormalMapper NMF', '*.nmf'),
+    ('VRML 1.0 WRL', '*.wrl'),
+    ('Stanford PLY', '*.ply'),
+    ('GNU GTS', '*.gts'),
+    ('Triangular Irregular Network TIN', '*.tin'),
+    ('Stereolithography STL', '*.stl'),
+    ('GLScene GLSM', '*.glsm')
+]
 
 pluginBase = PluginBase(package = 'editorPlugins')
 
@@ -194,6 +222,12 @@ class EditorApplication(Framework):
                 action(self, params)
     
     def onKeyDown(self, key):
+        if key == KEY_I and (self.keyPressed(KEY_LCTRL) or self.keyPressed(KEY_RCTRL)):
+            filePath = tkFileDialog.askopenfilename(filetypes = supportedFiles)
+            #TODO: check extension
+            ffMatlib = MaterialLibraryCreate();
+            #TODO: copy mesh to scene and set texture path for ffMatlib
+            ff = FreeformCreate(filePath, ffMatlib, ffMatlib, self.map)
         self.callActions('keyDown', { 'key': key })
             
     def onKeyUp(self, key):
