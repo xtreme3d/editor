@@ -39,6 +39,7 @@ Useful properties:
 - `app.boundingBox` - bounding box Dummycube to highlight selected object
 - `app.gizmo` - parent Dummycube for the 3D manipulator widgets
 - `app.font` - default font
+- `app.keycodes` - keyboard and mouse button codes (e.g. `app.keycodes.KEY_W`, `app.keycodes.MB_LEFT`). See `framework/keycodes.py` for a full list of codes.
 
 Useful methods:
 - TODO
