@@ -25,8 +25,8 @@ Instead of `'eventName'` use the following:
 `app` parameter is an application object (see `editor.py`). You can access any of its properties and methods, and even directly modify anything with Xtreme3D functions, so be careful!
 
 Useful properties:
-- `app.x3d` - a namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
-- `app.objects` - a root Dummycube
+- `app.x3d` - namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
+- `app.objects` - root Dummycube
 - `app.back` - root Dummycube for background objects
 - `app.scene` - root Dummycube for spatial objects
 - `app.front` - root Dummycube for HUD objects
