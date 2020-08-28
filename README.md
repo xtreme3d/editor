@@ -14,3 +14,7 @@ python editor.py
 ```
 python setup.py build
 ```
+
+## Controls
+- Right mouse button + WASD - navigate through the scene
+- Left mouse button - select object
