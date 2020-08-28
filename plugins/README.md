@@ -26,7 +26,7 @@ Instead of `'eventName'` use the following:
 
 Useful properties:
 - `app.x3d` - a namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
-- `app.objects` - a root Dummycube of the editor
+- `app.objects` - a root Dummycube
 - `app.back` - root Dummycube for background objects
 - `app.scene` - root Dummycube for spatial objects
 - `app.front` - root Dummycube for HUD objects
@@ -34,7 +34,7 @@ Useful properties:
 - `app.selectedObject` - currently selected object (or 0 if nothing selected)
 - `app.camera` - editor camera
 - `app.navigator` - default Navigator of the `app.camera`
-- `app.matlib` - default MaterialLibrary of the editor
+- `app.matlib` - default MaterialLibrary
 - `app.plane` - ground plane
 - `app.boundingBox` - bounding box Dummycube to highlight selected object
 - `app.gizmo` - parent Dummycube for the 3D manipulator widgets
