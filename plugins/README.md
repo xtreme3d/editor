@@ -22,7 +22,7 @@ Instead of `'eventName'` use the following:
 - `'selectObject'` - action is called when user selects an object
 - `'unselectObject'` - action is called when user unselects an object
 
-`app` parameter is an application object (see `editor.py`). You can access any of its properties and methods, so be careful!
+`app` parameter is an application object (see `editor.py`). You can access any of its properties and methods, and even directly modify anything with Xtreme3D functions, so be careful!
 
 Useful properties:
 - `app.x3d` - a namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
