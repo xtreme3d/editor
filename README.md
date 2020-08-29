@@ -18,3 +18,6 @@ python setup.py build
 ## Controls
 - Right mouse button + WASD - navigate through the scene
 - Left mouse button - select object
+- Arrow keys - move selected object
+- Ctrl+I - import a mesh
+- Ctrl+Down - put object on ground
