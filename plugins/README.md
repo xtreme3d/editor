@@ -66,8 +66,11 @@ Useful methods:
 - `app.keyComboPressed(key1, key2)` - if two keys are pressed
 - `app.mouseButtonPressed(button)` - if mouse button is pressed
 - `app.mouseComboPressed(button, key)` - if mouse button and a key are pressed
+- `app.addObject(className, filename, matlib, parent)` - add Xtreme3D object by className
+- `app.getMapProps()` - returns a dictionary with map data (objects, materials, etc) 
 - `app.selectObject(obj)` - select an object
 - `app.unselectObjects()` - clear selection
+- `app.jsonString(data)` - serialize a dictionary to JSON string
 
 `event` parameter has the following properties:
 - `event.key` - a key that is pressed or released
