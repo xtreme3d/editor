@@ -38,16 +38,11 @@ Instead of `'eventName'` use the following:
 
 Useful properties:
 - `app.x3d` - namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
-- `app.objects` - root Dummycube
-- `app.back` - root Dummycube for background objects
-- `app.scene` - root Dummycube for spatial objects
-- `app.front` - root Dummycube for HUD objects
-- `app.map` - root Dummycube for editable objects
-- `app.selectedObject` - currently selected object (or 0 if nothing selected)
-- `app.camera` - editor camera
-- `app.navigator` - default Navigator of the `app.camera`
-- `app.matlib` - default MaterialLibrary
-- `app.plane` - ground plane
+- `app.objects` - editable objects
+- `app.selectedObject` - currently selected object id (or 0 if nothing selected)
+- `app.camera` - editor camera id
+- `app.navigator` - default navigator id of the `app.camera`
+- `app.matlib` - default MaterialLibrary id
 - `app.boundingBox` - bounding box Dummycube to highlight selected object
 - `app.gizmo` - parent Dummycube for the 3D manipulator widgets
 - `app.font` - default font
@@ -67,12 +62,12 @@ Useful methods:
 - `app.mouseButtonPressed(button)` - if mouse button is pressed
 - `app.mouseComboPressed(button, key)` - if mouse button and a key are pressed
 - `app.addObject(className, filename, matlib, parent)` - add Xtreme3D object by className
-- `app.getMapProps()` - returns a dictionary with map data (objects, materials, etc) 
+- `app.getObjectById(id)` - select object by Xtreme3D id
+- `app.getObjectByIndex(index)` - select object by editor index
 - `app.selectObject(obj)` - select an object
 - `app.unselectObjects()` - clear selection
-- `app.jsonString(data)` - serialize a dictionary to JSON string
 
 `event` parameter has the following properties:
 - `event.key` - a key that is pressed or released
 - `event.button` - a mouse button that is pressed or released
-- `event.object` - an object that is selected or unselected
+- `event.object` - an id of the object that is selected or unselected
