@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import io
 import os.path
 import shutil
 import getpass
@@ -82,52 +83,55 @@ class Event:
         self.button = kwargs.get('button', KEY_UNKNOWN)
         self.object = kwargs.get('object', 0)
 
+lastIndex = 0
+def uniqueIndex():
+    global lastIndex
+    lastIndex += 1
+    return lastIndex
+
 class X3DObject:
-    id = 0
+    app = None
+    index = 0
+    id = 0 #Xtreme3D id
     name = ''
+    className = ''
     filename = ''
+    material = ''
+    parentIndex = 0
     
-    def __init__(self, id, name):
+    def __init__(self, app, id, className):
+        self.app = app
         self.id = id
-        self.name = name
+        self.className = className
+        self.index = uniqueIndex()
     
-    def getProps(self):
-        obj = self.id
-        name = ObjectGetName(obj)
-        tag = int(ObjectGetTag(obj))
-        className = ObjectGetClassName(obj)
-        parent = ObjectGetParent(obj)
-        parentTag = 0
-        if parent != 0:
-            parentTag = int(ObjectGetTag(parent))
-        position = [
-            ObjectGetPositionX(obj),
-            ObjectGetPositionY(obj),
-            ObjectGetPositionZ(obj)
+    def getParentObject(self):
+        parentId = ObjectGetParent(self.id)
+        for obj in self.app.objects:
+            if obj.id == parentId:
+                return obj
+        return None
+
+    def getPosition(self):
+        return [
+            ObjectGetPositionX(self.id),
+            ObjectGetPositionY(self.id),
+            ObjectGetPositionZ(self.id)
         ]
-        rotation = [
-            ObjectGetPitch(obj),
-            ObjectGetTurn(obj),
-            ObjectGetRoll(obj)
+    
+    def getRotation(self):
+        return [
+            ObjectGetPitch(self.id),
+            ObjectGetTurn(self.id),
+            ObjectGetRoll(self.id)
         ]
-        scale = [
-            ObjectGetScale(obj, 0),
-            ObjectGetScale(obj, 1),
-            ObjectGetScale(obj, 2)
+    
+    def getScale(self):
+        return [
+            ObjectGetScale(self.id, 0),
+            ObjectGetScale(self.id, 1),
+            ObjectGetScale(self.id, 2)
         ]
-        materialName = ObjectGetMaterial(obj)
-        data = {
-            'name': name,
-            'tag': tag,
-            'class': className,
-            'parent': parentTag,
-            'position': position,
-            'rotation': rotation,
-            'scale': scale,
-            'material': materialName,
-            'filename': self.filename
-        }
-        return data
 
 class EditorApplication(Framework):
     mapName = 'My Map'
@@ -139,6 +143,9 @@ class EditorApplication(Framework):
     previousMouseX = 0
     previousMouseY = 0
     dragAxis = -1
+    
+    lastIndexForClass = {}
+    lastTag = 0
     
     actions = {
         'keyDown': [],
@@ -164,7 +171,7 @@ class EditorApplication(Framework):
     importers = {
     }
     
-    x3dObjects = []
+    objects = []
 
     def start(self):
         self.keycodes = keycodes
@@ -185,17 +192,26 @@ class EditorApplication(Framework):
         MaterialLibrarySetTexturePaths(self.internalMatlib, 'data')
         
         self.matlib = MaterialLibraryCreate()
-        # TODO
-        #MaterialLibrarySetTexturePaths(self.matlib, 'data')
-        MaterialLibraryActivate(self.matlib)
 
-        self.objects = DummycubeCreate(0)
-        self.back = DummycubeCreate(self.objects)
-        self.scene = DummycubeCreate(self.objects)
-        self.map = DummycubeCreate(self.objects)
-        self.front = DummycubeCreate(self.objects)
+        self.root = DummycubeCreate(0)
+        self.back = DummycubeCreate(self.root)
+        self.map = DummycubeCreate(self.root)
+        self.scene = DummycubeCreate(self.root)
+        self.front = DummycubeCreate(self.root)
         
         ObjectShowAxes(self.scene, True)
+        
+        # Objects that should be saved to file
+        ObjectSetName(self.map, 'map')
+        
+        obj = self.addObject('TGLDodecahedron', '', self.matlib, self.map)
+        ObjectSetPosition(obj.id, 2, 0, 0)
+        
+        obj = self.addObject('TGLTeapot', '', self.matlib, self.map)
+        ObjectSetPosition(obj.id, 4, 0, 0)
+        
+        # Internal objects
+        MaterialLibraryActivate(self.internalMatlib)
         
         self.light = LightCreate(lsOmni, self.scene)
         LightSetAmbientColor(self.light, c_gray);
@@ -214,8 +230,6 @@ class EditorApplication(Framework):
         NavigatorSetUseVirtualUp(self.navigator, True)
         NavigatorSetVirtualUp(self.navigator, 0, 1, 0)
         
-        MaterialLibraryActivate(self.internalMatlib)
-        
         self.plane = PlaneCreate(0, 100, 100, 100, 100, self.scene)
         MaterialCreate('mGround', 'data/tiles.png')
         MaterialSetOptions('mGround', 1, 1)
@@ -223,18 +237,6 @@ class EditorApplication(Framework):
         ObjectSetMaterial(self.plane, 'mGround')
         ObjectPitch(self.plane, 90)
         
-        MaterialLibraryActivate(self.matlib)
-        
-        # Objects that should be saved to file
-        ObjectSetName(self.map, 'map')
-        
-        obj = self.addObject('TGLDodecahedron', '', self.matlib, self.map)
-        ObjectSetPosition(obj, 2, 0, 0)
-        
-        obj = self.addObject('TGLTeapot', '', self.matlib, self.map)
-        ObjectSetPosition(obj, 4, 0, 0)
-        
-        # GUI widgets
         self.boundingBox = DummycubeCreate(self.scene)
         DummycubeSetVisible(self.boundingBox, True)
         DummycubeSetEdgeColor(self.boundingBox, c_white)
@@ -243,6 +245,7 @@ class EditorApplication(Framework):
         self.gizmo = DummycubeCreate(self.scene)
         ObjectSetScale(self.gizmo, 0.75, 0.75, 0.75)
         ObjectHide(self.gizmo)
+        ObjectIgnoreDepthBuffer(self.gizmo, True)
         
         self.gizmoX = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmo)
         ObjectSetPositionX(self.gizmoX, 0.5)
@@ -254,8 +257,6 @@ class EditorApplication(Framework):
         MaterialSetOptions('gizmoRed', True, True)
         ObjectSetMaterial(self.gizmoX, 'gizmoRed')
         ObjectSetMaterial(self.gizmoArrowX, 'gizmoRed')
-        ObjectIgnoreDepthBuffer(self.gizmoX, True)
-        ObjectIgnoreDepthBuffer(self.gizmoArrowX, True)
         
         self.gizmoY = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmo)
         ObjectSetPositionY(self.gizmoY, 0.5)
@@ -266,8 +267,6 @@ class EditorApplication(Framework):
         MaterialSetOptions('gizmoGreen', True, True)
         ObjectSetMaterial(self.gizmoY, 'gizmoGreen')
         ObjectSetMaterial(self.gizmoArrowY, 'gizmoGreen')
-        ObjectIgnoreDepthBuffer(self.gizmoY, True)
-        ObjectIgnoreDepthBuffer(self.gizmoArrowY, True)
         
         self.gizmoZ = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmo)
         ObjectSetPositionZ(self.gizmoZ, 0.5)
@@ -280,8 +279,8 @@ class EditorApplication(Framework):
         MaterialSetOptions('gizmoBlue', True, True)
         ObjectSetMaterial(self.gizmoZ, 'gizmoBlue')
         ObjectSetMaterial(self.gizmoArrowZ, 'gizmoBlue')
-        ObjectIgnoreDepthBuffer(self.gizmoZ, True)
-        ObjectIgnoreDepthBuffer(self.gizmoArrowZ, True)
+        
+        MaterialLibraryActivate(self.matlib)
         
         self.font = TTFontCreate('data/fonts/NotoSans-Regular.ttf', 14)
         
@@ -339,12 +338,15 @@ class EditorApplication(Framework):
     def importMap(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in self.importers:
+            self.unselectObjects()
             ObjectDestroyChildren(self.map)
             MaterialLibraryClear(self.matlib)
+            self.objects = []
+            self.lastIndexForClass = {}
+            self.lastTag = 0
             self.importers[ext](self, self.map, filename)
     
     def importModel(self, filename):
-        #TODO: copy model file to scene folder
         name, ext = os.path.splitext(filename)
         if ext in supportedMeshExtensions:
             if ext in supportedAnimatedMeshExtensions:
@@ -405,29 +407,29 @@ class EditorApplication(Framework):
                 self.unselectObjects()
         self.callActions('mouseClick', Event(button = button))
     
-    def selectObject(self, obj):
-        self.selectedObject = obj
-        self.updateBoundingBox(obj)
+    def selectObject(self, id):
+        self.selectedObject = id
+        self.updateBoundingBox(id)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
-        self.callActions('selectObject', Event(object = obj))
+        self.callActions('selectObject', Event(object = id))
     
     def unselectObjects(self):
         if self.selectedObject != 0:
-            obj = self.selectedObject
+            id = self.selectedObject
             ObjectHide(self.boundingBox)
             ObjectHide(self.gizmo)
-            self.callActions('unselectObject', Event(object = obj))
+            self.callActions('unselectObject', Event(object = id))
             self.selectedObject = 0
     
-    def updateBoundingBox(self, obj):
-        ObjectSetPositionOfObject(self.gizmo, obj)
-        ObjectSetPositionOfObject(self.boundingBox, obj)
-        ObjectAlignWithObject(self.boundingBox, obj)
-        sx = ObjectGetScale(obj, 0)
-        sy = ObjectGetScale(obj, 1)
-        sz = ObjectGetScale(obj, 2)
-        bsr = ObjectGetBoundingSphereRadius(obj)
+    def updateBoundingBox(self, id):
+        ObjectSetPositionOfObject(self.gizmo, id)
+        ObjectSetPositionOfObject(self.boundingBox, id)
+        ObjectAlignWithObject(self.boundingBox, id)
+        sx = ObjectGetScale(id, 0)
+        sy = ObjectGetScale(id, 1)
+        sz = ObjectGetScale(id, 2)
+        bsr = ObjectGetBoundingSphereRadius(id)
         ObjectSetScale(self.boundingBox, max(bsr, sx * 0.5), max(bsr, sy * 0.5), max(bsr, sz * 0.5))
     
     def onWindowResize(self, width, height):
@@ -439,31 +441,31 @@ class EditorApplication(Framework):
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         if self.selectedObject != 0:
-            obj = self.selectedObject
-            dirx = ObjectGetAbsoluteDirection(obj, 0)
-            diry = ObjectGetAbsoluteDirection(obj, 1)
-            dirz = ObjectGetAbsoluteDirection(obj, 2)
-            ux = ObjectGetAbsoluteUp(obj, 0)
-            uy = ObjectGetAbsoluteUp(obj, 1)
-            uz = ObjectGetAbsoluteUp(obj, 2)
-            rx = ObjectGetAbsoluteRight(obj, 0)
-            ry = ObjectGetAbsoluteRight(obj, 1)
-            rz = ObjectGetAbsoluteRight(obj, 2)
+            id = self.selectedObject
+            dirx = ObjectGetAbsoluteDirection(id, 0)
+            diry = ObjectGetAbsoluteDirection(id, 1)
+            dirz = ObjectGetAbsoluteDirection(id, 2)
+            ux = ObjectGetAbsoluteUp(id, 0)
+            uy = ObjectGetAbsoluteUp(id, 1)
+            uz = ObjectGetAbsoluteUp(id, 2)
+            rx = ObjectGetAbsoluteRight(id, 0)
+            ry = ObjectGetAbsoluteRight(id, 1)
+            rz = ObjectGetAbsoluteRight(id, 2)
             
             if self.dragAxis == 0:
                 vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
                 vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
                 strafe = rx * vx + rz * vz
-                ObjectTranslate(obj, strafe, 0, 0)
+                ObjectTranslate(id, strafe, 0, 0)
             elif self.dragAxis == 1:
                 lift = -(uy * dy * 0.01)
-                ObjectTranslate(obj, 0, lift, 0)
+                ObjectTranslate(id, 0, lift, 0)
             elif self.dragAxis == 2:
                 vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
                 vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
                 move = dirx * vx + dirz * vz
-                ObjectTranslate(obj, 0, 0, move)
-            self.updateBoundingBox(obj)
+                ObjectTranslate(id, 0, 0, move)
+            self.updateBoundingBox(id)
     
     def controlNavigator(self, dt):
         dx = (self.mouseX - self.dragOriginX) * self.mouseSensibility;
@@ -505,7 +507,7 @@ class EditorApplication(Framework):
             x = ObjectGetPosition(obj, 0)
             y = ObjectGetPosition(obj, 1)
             z = ObjectGetPosition(obj, 2)
-            HUDTextSetText(self.text, 'X: %.2f\rY: %.2f\rZ: %.2f' % (x, y, z));
+            HUDTextSetText(self.text, 'Name: %s\rX: %.2f\rY: %.2f\rZ: %.2f' % (ObjectGetName(obj), x, y, z));
         
         Update(dt)
     
@@ -514,82 +516,62 @@ class EditorApplication(Framework):
 
     # Map API
     
-    lastIndexForClass = {}
-    
-    def makeUniqueNameFrom(self, name):
-        if name in self.lastIndexForClass:
-            index = self.lastIndexForClass[name] + 1
-            self.lastIndexForClass[name] += 1
-            return name + str(index)
-        else:
-            index = 0
-            self.lastIndexForClass[name] = 0
-            return name + str(index)
-    
-    lastTag = 0
-    def makeUniqueTag(self):
-        self.lastTag += 1
-        return self.lastTag
-    
-    def addObject(self, className, filename, matlib, parent):
+    def addObject(self, className, filename, matlib, parentId):
+        className = unicode(className)
         creators = {
-            'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parent),
-            'TGLCube': lambda: CubeCreate(1, 1, 1, parent),
-            'TGLSphere': lambda: SphereCreate(1, 16, 8, parent),
-            'TGLCylinder': lambda: CylinderCreate(1, 1, 1, 16, 1, 1, parent),
-            'TGLCone': lambda: ConeCreate(1, 1, 16, 1, 1, parent),
-            'TGLAnnulus': lambda: AnnulusCreate(0.5, 1, 1, 16, 1, 1, parent),
-            'TGLTorus': lambda: TorusCreate(0.5, 1, 16, 8, parent),
-            'TGLDisk': lambda: DiskCreate(0.5, 1, 0.0, 360.0, 1, 16, parent),
-            'TGLFrustum': lambda: FrustrumCreate(1, 1, 1, 0.5, parent),
-            'TGLDodecahedron': lambda: DodecahedronCreate(parent),
-            'TGLIcosahedron': lambda: IcosahedronCreate(parent),
-            'TGLTeapot': lambda: TeapotCreate(parent),
-            'TGLFreeform': lambda: FreeformCreate(filename, matlib, matlib, parent),
-            'TGLActor': lambda: ActorCreate(filename, matlib, parent)
+            'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parentId),
+            'TGLCube': lambda: CubeCreate(1, 1, 1, parentId),
+            'TGLSphere': lambda: SphereCreate(1, 16, 8, parentId),
+            'TGLCylinder': lambda: CylinderCreate(1, 1, 1, 16, 1, 1, parentId),
+            'TGLCone': lambda: ConeCreate(1, 1, 16, 1, 1, parentId),
+            'TGLAnnulus': lambda: AnnulusCreate(0.5, 1, 1, 16, 1, 1, parentId),
+            'TGLTorus': lambda: TorusCreate(0.5, 1, 16, 8, parentId),
+            'TGLDisk': lambda: DiskCreate(0.5, 1, 0.0, 360.0, 1, 16, parentId),
+            'TGLFrustum': lambda: FrustrumCreate(1, 1, 1, 0.5, parentId),
+            'TGLDodecahedron': lambda: DodecahedronCreate(parentId),
+            'TGLIcosahedron': lambda: IcosahedronCreate(parentId),
+            'TGLTeapot': lambda: TeapotCreate(parentId),
+            'TGLFreeform': lambda: FreeformCreate(filename, matlib, matlib, parentId),
+            'TGLActor': lambda: ActorCreate(filename, matlib, parentId)
         }
         if className in creators:
-            obj = creators[className]()
-            name = self.makeUniqueNameFrom(className)
-            tag = self.makeUniqueTag()
-            ObjectSetName(obj, name)
-            ObjectSetTag(obj, tag)
-            x3dObject = X3DObject(obj, name)
-            x3dObject.filename = filename
-            self.x3dObjects.append(x3dObject)
+            id = creators[className]()
+            obj = X3DObject(self, id, className)
+            obj.filename = filename
+            parentObj = obj.getParentObject()
+            obj.parentIndex = 0
+            if not parentObj is None:
+                obj.parentIndex = parentObj.index
+            self.objects.append(obj)
             return obj
         else:
             self.logError('Unsupported object class: %s' % className)
             return 0
-    
-    def getMaterialProps(self, materialName):
-        materialData = {
-            'name': materialName
-            #TODO: props from metadata
-        }
-        return materialData
-    
-    def getMapProps(self):
-        data = {
-            'name': self.mapName,
-            'author': self.mapAuthor,
-            'copyright': self.mapCopyright, 
-            'objects': [],
-            'materials': {}
-        }
-        for x3dObject in self.x3dObjects:
-            obj = x3dObject.id
-            materialName = ObjectGetMaterial(obj)
-            if len(materialName) > 0:
-                if not materialName in data['materials']:
-                    materialData = self.getMaterialProps(materialName)
-                    data['materials'][materialName] = materialData
-            objData = x3dObject.getProps()
-            data['objects'].append(objData)
-        return data
 
-    def jsonString(self, data):
-        return json.dumps(data, indent = 4, separators = (',', ': '))
+    def getObjectByIndex(self, index):
+        for obj in self.objects:
+            if obj.index == index:
+                return obj
+        return None
+
+    def getObjectById(self, id):
+        for obj in self.objects:
+            if obj.id == id:
+                return obj
+        return None
+
+    def saveJSON(self, filename, data):
+        f = open(filename, 'w')
+        jsonStr = json.dumps(data, indent = 4, separators = (',', ': '), ensure_ascii = False)
+        f.write(unicode(jsonStr).encode('utf-8'))
+        f.close()
+
+    def loadJSON(self, filename):
+        data = {}
+        f = io.open(filename, 'r', encoding = 'utf8')
+        data = json.loads(f.read())
+        f.close()
+        return data
 
     def dirName(self, path):
         return os.path.dirname(path)
@@ -606,7 +588,7 @@ class EditorApplication(Framework):
         name = os.path.basename(filename)
         newFilename = dir + '/' + name
         if filename != newFilename:
-            shutil.copy2(filename, dir)
+            shutil.copy(filename, dir + '/')
 
 app = EditorApplication(1280, 720, 'Xtreme3D Editor')
 app.run()
