@@ -19,8 +19,8 @@ python setup.py build
 - Right mouse button + WASD - navigate through the scene
 - Left mouse button - select object
 - Arrow keys - move selected object
-- Ctrl+O - open scene
-- Ctrl+S - save scene
+- Ctrl+O - open scene (not implemented yet)
+- Ctrl+S - save scene (WIP)
 - Ctrl+I - import model
 - Ctrl+Down - put selected object on ground
 
