@@ -368,9 +368,9 @@ class EditorApplication(Framework):
         name, ext = os.path.splitext(filename)
         if ext in supportedMeshExtensions:
             if ext in supportedAnimatedMeshExtensions:
-                obj = self.addObject('TGLActor', filename, self.matlib, self.map)
+                obj = self.addObject('TGLActor', filename)
             else:
-                obj = self.addObject('TGLFreeform', filename, self.matlib, self.map)
+                obj = self.addObject('TGLFreeform', filename)
         else:
             msg = 'Unsupported mesh format: ' + ext
             self.logWarning(msg)

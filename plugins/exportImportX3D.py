@@ -26,7 +26,7 @@ def exportX3D(app, filename):
                 }
                 data['materials'][materialName] = materialData
         
-        parentObj = obj.getParentObject()
+        parentObj = obj.getParent()
         parentIndex = 0
         if not parentObj is None:
             parentIndex = parentObj.index
