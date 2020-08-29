@@ -261,15 +261,13 @@ class EditorApplication(Framework):
         else:
             self.logWarning("Unsupported event: \"%s\"" % (event))
     
-    def registerExporter(self, format, mask, func):
-        self.supportedExportFormats.append((format, mask))
-        name, ext = os.path.splitext(mask)
-        self.exporters[ext] = func
+    def registerExporter(self, format, ext, func):
+        self.supportedExportFormats.append((format, '*.%s' % ext))
+        self.exporters['.%s' % ext] = func
         
-    def registerImporter(self, format, mask, func):
-        self.supportedImportFormats.append((format, mask))
-        name, ext = os.path.splitext(mask)
-        self.importers[ext] = func
+    def registerImporter(self, format, ext, func):
+        self.supportedImportFormats.append((format, '*.%s' % ext))
+        self.importers['.%s' % ext] = func
     
     def callActions(self, event, params):
         if event in self.actions:

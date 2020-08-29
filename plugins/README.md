@@ -21,8 +21,8 @@ def importerFunction(app, map, filename):
 
 def setup(app):
     app.registerAction('eventName', actionFunction)
-    app.registerExporter('My Scene Format', '*.msf', exporterFunction)
-    app.registerImporter('My Scene Format', '*.msf', importerFunction)
+    app.registerExporter('My Scene Format', 'msf', exporterFunction)
+    app.registerImporter('My Scene Format', 'msf', importerFunction)
 ```
 
 Instead of `'eventName'` use the following:
@@ -56,8 +56,8 @@ Useful properties:
 
 Useful methods:
 - `app.registerAction(eventName, func)` - register action for an event
-- `app.registerExporter(formatDescription, fileMask, func)` - register exporter for a given format
-- `app.registerImporter(formatDescription, fileMask, func)` - register importer for a given format
+- `app.registerExporter(description, extension, func)` - register exporter for a given format
+- `app.registerImporter(description, extension, func)` - register importer for a given format
 - `app.logMessage(msg)` - print a message to `editor.log`
 - `app.logWarning(msg)` - print a warning message to `editor.log`
 - `app.logError(msg)` - print an error message to `editor.log`, then exit
