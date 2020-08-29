@@ -21,3 +21,10 @@ python setup.py build
 - Arrow keys - move selected object
 - Ctrl+I - import a mesh
 - Ctrl+Down - put object on ground
+
+## License
+Copyright (c) 2020 Timur Gafarov. Distributed under the Boost Software License, Version 1.0.
+Contains source code from the following projects:
+- [PySDL2](https://pypi.org/project/PySDL2/) - Public Domain
+- [Pluginbase](https://pypi.org/project/pluginbase/) - BSD license
+- [cx_Freeze 5](https://pypi.org/project/cx-Freeze/) - PSFL-derived license
