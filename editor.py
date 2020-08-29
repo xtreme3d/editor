@@ -5,6 +5,7 @@ import math
 import time
 import ctypes
 import Tkinter, tkFileDialog
+import logging
 import sdl2
 from framework import *
 from framework import keycodes
@@ -36,6 +37,15 @@ supportedFiles = [
     ('Stereolithography STL', '*.stl'),
     ('GLScene GLSM', '*.glsm')
 ]
+
+logFilename = 'editor.log'
+logging.basicConfig(
+    format = '%(asctime)s %(levelname)-8s %(message)s', 
+    datefmt = '%d-%m-%Y %H:%M:%S', 
+    filename = logFilename,
+    level = logging.INFO)
+logging.FileHandler(logFilename, mode='w')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 pluginBase = PluginBase(package = 'editorPlugins')
 
@@ -207,6 +217,15 @@ class EditorApplication(Framework):
         
         self.setMouseToCenter()
     
+    def logMessage(self, msg):
+        logging.info(msg)
+        
+    def logWarning(self, msg):
+        logging.warning(msg)
+        
+    def logError(self, msg):
+        logging.error(msg)
+    
     def message(self, title, text, style):
         messageBox(title, text, style)
     
@@ -214,7 +233,10 @@ class EditorApplication(Framework):
         if event in self.actions:
             self.actions[event].append(func)
         else:
-            print("Unsupported event: \"%s\"" % (event))
+            self.logWarning("Unsupported event: \"%s\"" % (event))
+    
+    #TODO: registerImporter(self, format, func)
+    #TODO: registerExporter(self, format, func)
     
     def callActions(self, event, params):
         if event in self.actions:
@@ -294,50 +316,59 @@ class EditorApplication(Framework):
     def onWindowResize(self, width, height):
         ViewerResize(self.viewer, 0, 0, width, height)
     
+    def dragSelectedObject(self):
+        dx = (self.mouseX - self.previousMouseX);
+        dy = (self.mouseY - self.previousMouseY);
+        self.previousMouseX = self.mouseX
+        self.previousMouseY = self.mouseY
+        if self.selectedObject != 0:
+            obj = self.selectedObject
+            dirx = ObjectGetAbsoluteDirection(obj, 0)
+            diry = ObjectGetAbsoluteDirection(obj, 1)
+            dirz = ObjectGetAbsoluteDirection(obj, 2)
+            ux = ObjectGetAbsoluteUp(obj, 0)
+            uy = ObjectGetAbsoluteUp(obj, 1)
+            uz = ObjectGetAbsoluteUp(obj, 2)
+            rx = ObjectGetAbsoluteRight(obj, 0)
+            ry = ObjectGetAbsoluteRight(obj, 1)
+            rz = ObjectGetAbsoluteRight(obj, 2)
+            
+            if self.dragAxis == 0:
+                vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
+                vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
+                strafe = rx * vx + rz * vz
+                ObjectTranslate(obj, strafe, 0, 0)
+            elif self.dragAxis == 1:
+                lift = -(uy * dy * 0.01)
+                ObjectTranslate(obj, 0, lift, 0)
+            elif self.dragAxis == 2:
+                vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
+                vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
+                move = dirx * vx + dirz * vz
+                ObjectTranslate(obj, 0, 0, move)
+            self.updateBoundingBox(obj)
+    
+    def controlNavigator(self, dt):
+        dx = (self.mouseX - self.dragOriginX) * self.mouseSensibility;
+        dy = (self.mouseY - self.dragOriginY) * self.mouseSensibility;
+        self.setMouse(self.dragOriginX, self.dragOriginY);
+        NavigatorTurnHorizontal(self.navigator, dx)
+        NavigatorTurnVertical(self.navigator, -dy)
+        if self.keyPressed(KEY_W):
+            NavigatorFlyForward(self.navigator, 5 * dt)
+        if self.keyPressed(KEY_A):
+            NavigatorStrafeHorizontal(self.navigator, -5 * dt)
+        if self.keyPressed(KEY_D):
+            NavigatorStrafeHorizontal(self.navigator, 5 * dt)
+        if self.keyPressed(KEY_S):
+            NavigatorFlyForward(self.navigator, -5 * dt)
+    
     def update(self, dt):
         if self.mouseButtonPressed(MB_LEFT):
-            dx = (self.mouseX - self.previousMouseX);
-            dy = (self.mouseY - self.previousMouseY);
-            self.previousMouseX = self.mouseX
-            self.previousMouseY = self.mouseY
-            if self.selectedObject != 0:
-                obj = self.selectedObject
-                
-                dirx = ObjectGetAbsoluteDirection(obj, 0)
-                diry = ObjectGetAbsoluteDirection(obj, 1)
-                dirz = ObjectGetAbsoluteDirection(obj, 2)
-                ux = ObjectGetAbsoluteUp(obj, 0)
-                uy = ObjectGetAbsoluteUp(obj, 1)
-                uz = ObjectGetAbsoluteUp(obj, 2)
-                rx = ObjectGetAbsoluteRight(obj, 0)
-                ry = ObjectGetAbsoluteRight(obj, 1)
-                rz = ObjectGetAbsoluteRight(obj, 2)
-                
-                if self.dragAxis == 0:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
-                    strafe = rx * vx + rz * vz
-                    ObjectTranslate(obj, strafe, 0, 0)
-                elif self.dragAxis == 1:
-                    lift = -(uy * dy * 0.01)
-                    ObjectTranslate(obj, 0, lift, 0)
-                elif self.dragAxis == 2:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
-                    move = dirx * vx + dirz * vz
-                    ObjectTranslate(obj, 0, 0, move)
-                self.updateBoundingBox(obj)
+            self.dragSelectedObject()
                 
         if self.mouseButtonPressed(MB_RIGHT):
-            dx = (self.mouseX - self.dragOriginX) * self.mouseSensibility;
-            dy = (self.mouseY - self.dragOriginY) * self.mouseSensibility;
-            self.setMouse(self.dragOriginX, self.dragOriginY);
-            NavigatorTurnHorizontal(self.navigator, dx)
-            NavigatorTurnVertical(self.navigator, -dy)
-            if self.keyPressed(KEY_W): NavigatorFlyForward(self.navigator, 5 * dt)
-            if self.keyPressed(KEY_A): NavigatorStrafeHorizontal(self.navigator, -5 * dt)
-            if self.keyPressed(KEY_D): NavigatorStrafeHorizontal(self.navigator, 5 * dt)
-            if self.keyPressed(KEY_S): NavigatorFlyForward(self.navigator, -5 * dt)
+            self.controlNavigator(dt)
         
         if self.selectedObject != 0:
             obj = self.selectedObject
@@ -354,7 +385,6 @@ class EditorApplication(Framework):
                 if self.keyPressed(KEY_DOWN):
                     ObjectTranslate(obj, 0, 0, -0.1)
                     self.updateBoundingBox(obj)
-        
             x = ObjectGetPosition(obj, 0)
             y = ObjectGetPosition(obj, 1)
             z = ObjectGetPosition(obj, 2)

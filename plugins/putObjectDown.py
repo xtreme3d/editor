@@ -12,3 +12,4 @@ def putObjectDown(app, event):
     
 def setup(app):
     app.registerAction('keyDown', putObjectDown)
+
