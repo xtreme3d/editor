@@ -145,6 +145,13 @@ class EditorApplication(Framework):
         self.map = DummycubeCreate(self.scene)
         ObjectSetName(self.map, 'map')
         
+        obj = self.addTopLevelObject('TGLCube', '')
+        ObjectSetPosition(obj, 2, 0, 0)
+        
+        obj = self.addTopLevelObject('TGLCube', '')
+        ObjectSetPosition(obj, 4, 0, 0)
+        
+        """
         self.sphere0 = SphereCreate(0.25, 16, 8, self.map)
         ObjectSetPosition(self.sphere0, 1, 0.25, 1)
         ObjectSetName(self.sphere0, 'sphere0')
@@ -152,10 +159,9 @@ class EditorApplication(Framework):
         self.cube0 = CubeCreate(0.5, 0.5, 0.5, self.map)
         ObjectSetPosition(self.cube0, 2, 0.25, 1)
         ObjectSetName(self.cube0, 'cube0')
+        """
         
-        #matlib2 = MaterialLibraryCreate();
-        #MaterialLibrarySetTexturePaths(matlib2, 'data/hellknight')
-        #MaterialLibraryActivate(matlib2)
+        """
         bump = BumpShaderCreate();
         BumpShaderSetDiffuseTexture(bump, '')
         BumpShaderSetNormalTexture(bump, '')
@@ -178,8 +184,7 @@ class EditorApplication(Framework):
         ObjectSetPosition(hk, 0, 0, 0)
         ObjectSetMaterial(hk, 'mHellknight')
         ObjectSetName(hk, 'hellknight')
-            
-        #MaterialLibraryActivate(self.matlib);
+        """
         
         # GUI widgets
         self.boundingBox = DummycubeCreate(self.scene)
@@ -447,6 +452,33 @@ class EditorApplication(Framework):
     
     def render(self):
         ViewerRender(self.viewer)
+
+    # Map API
+    
+    lastIndexForClass = {
+    }
+    
+    def makeUniqueNameFrom(self, name):
+        if name in self.lastIndexForClass:
+            index = self.lastIndexForClass[name] + 1
+            self.lastIndexForClass[name] += 1
+            return name + str(index)
+        else:
+            index = 0
+            self.lastIndexForClass[name] = 0
+            return name + str(index)
+    
+    def addTopLevelObject(self, className, filename):
+        creators = {
+            'TGLCube': lambda: CubeCreate(1, 1, 1, self.map)
+        }
+        if className in creators:
+            obj = creators[className]()
+            name = self.makeUniqueNameFrom(className)
+            ObjectSetName(obj, name)
+            return obj
+        else:
+            return 0
 
     def getObjectProps(self, obj):
         name = ObjectGetName(obj)
