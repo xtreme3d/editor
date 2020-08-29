@@ -200,15 +200,7 @@ class EditorApplication(Framework):
         self.front = DummycubeCreate(self.root)
         
         ObjectShowAxes(self.scene, True)
-        
-        # Objects that should be saved to file
         ObjectSetName(self.map, 'map')
-        
-        obj = self.addObject('TGLDodecahedron', '', self.matlib, self.map)
-        ObjectSetPosition(obj.id, 2, 0, 0)
-        
-        obj = self.addObject('TGLTeapot', '', self.matlib, self.map)
-        ObjectSetPosition(obj.id, 4, 0, 0)
         
         # Internal objects
         MaterialLibraryActivate(self.internalMatlib)
