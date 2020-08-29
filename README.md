@@ -7,7 +7,7 @@ Scene editor for Xtreme3D 3.8+. Work in progress!
 
 ## Run
 ```
-python editor.py
+python src/main.py
 ```
 
 ## Build standalone
