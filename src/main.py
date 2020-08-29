@@ -490,6 +490,7 @@ class EditorApplication(Framework):
             #TODO: keep in metadata
             return obj
         else:
+            self.logError('Unsupported object class: %s' % className)
             return 0
 
     def getObjectProps(self, obj):
