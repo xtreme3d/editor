@@ -9,6 +9,11 @@ executable = Executable(
     icon = 'assets/editor.ico',
     base = 'Win32GUI')
 
+packages = [
+    'os', 'sys', 'time', 'math', 'random', 
+    'ctypes', 'json', 'logging'
+]
+
 include = [
     'data',
     'plugins',
@@ -23,10 +28,10 @@ setup(
     description = 'Xtreme3D Editor',
     options = {
         'build_exe': {
-            'packages': ['os', 'sys', 'time', 'random', 'ctypes'],
+            'packages': packages,
             'include_files': include,
             'include_msvcr': True,
-            'excludes': ['tkinter', 'tcl', 'tk', 'sqlite3'],
+            'excludes': ['sqlite3'],
             'optimize': 2
         }
     },

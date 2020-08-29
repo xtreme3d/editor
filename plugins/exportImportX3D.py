@@ -1,7 +1,8 @@
 def exportX3D(app, map, filename):
     print('Export %s...' % filename)
+    data = app.getMapProps()
     f = open(filename, 'w')
-    f.write('Test')
+    f.write(app.jsonString(data))
     f.close()
     
 def importX3D(app, map, filename):

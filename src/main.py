@@ -7,6 +7,7 @@ import ctypes
 import Tkinter, tkFileDialog
 import logging
 import sdl2
+import json
 from framework import *
 from framework import keycodes
 from pluginbase import PluginBase
@@ -105,6 +106,7 @@ class EditorApplication(Framework):
         ViewerSetAutoRender(self.viewer, False)
 
         self.matlib = MaterialLibraryCreate()
+        MaterialLibrarySetTexturePaths(self.matlib, 'data;data/hellknight')
         MaterialLibraryActivate(self.matlib)
 
         self.objects = DummycubeCreate(0)
@@ -141,6 +143,7 @@ class EditorApplication(Framework):
         
         # Objects that should be saved to file
         self.map = DummycubeCreate(self.scene)
+        ObjectSetName(self.map, 'map')
         
         self.sphere0 = SphereCreate(0.25, 16, 8, self.map)
         ObjectSetPosition(self.sphere0, 1, 0.25, 1)
@@ -150,9 +153,9 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.cube0, 2, 0.25, 1)
         ObjectSetName(self.cube0, 'cube0')
         
-        matlib2 = MaterialLibraryCreate();
-        MaterialLibrarySetTexturePaths(matlib2, 'data/hellknight')
-        MaterialLibraryActivate(matlib2)
+        #matlib2 = MaterialLibraryCreate();
+        #MaterialLibrarySetTexturePaths(matlib2, 'data/hellknight')
+        #MaterialLibraryActivate(matlib2)
         bump = BumpShaderCreate();
         BumpShaderSetDiffuseTexture(bump, '')
         BumpShaderSetNormalTexture(bump, '')
@@ -167,15 +170,16 @@ class EditorApplication(Framework):
         MaterialSetSpecularColor('mHellknight', c_ltgray, 1)
         MaterialSetShader('mHellknight', bump)
 
-        hk = ActorCreate('data/hellknight/hellknight.md5mesh', matlib2, self.map)
+        hk = ActorCreate('data/hellknight/hellknight.md5mesh', self.matlib, self.map)
         ActorAddObject(hk, 'data/hellknight/idle.md5anim')
         ActorAddObject(hk, 'data/hellknight/attack.md5anim')
         ActorSwitchToAnimation(hk, 0, True)
         ObjectSetScale(hk, 0.012, 0.012, 0.012)
         ObjectSetPosition(hk, 0, 0, 0)
         ObjectSetMaterial(hk, 'mHellknight')
+        ObjectSetName(hk, 'hellknight')
             
-        MaterialLibraryActivate(self.matlib);
+        #MaterialLibraryActivate(self.matlib);
         
         # GUI widgets
         self.boundingBox = DummycubeCreate(self.scene)
@@ -443,6 +447,67 @@ class EditorApplication(Framework):
     
     def render(self):
         ViewerRender(self.viewer)
+
+    def getObjectProps(self, obj):
+        name = ObjectGetName(obj)
+        className = ObjectGetClassName(obj)
+        parent = ObjectGetParent(obj)
+        parentName = 'map'
+        if parent != 0:
+            parentName = ObjectGetName(parent)
+        position = [
+            ObjectGetPositionX(obj),
+            ObjectGetPositionY(obj),
+            ObjectGetPositionZ(obj)
+        ]
+        rotation = [0, 0, 0] #TODO
+        scale = [1, 1, 1] #TODO
+        materialName = ObjectGetMaterial(obj)
+        objData = {
+            'name': name,
+            'class': className,
+            'parent': parentName,
+            'position': position,
+            'rotation': rotation,
+            'scale': scale,
+            'material': materialName
+            #TODO: filename
+        }
+        return objData
+    
+    def getMaterialProps(self, materialName):
+        materialData = {
+            'name': materialName
+            #TODO: props from editor
+        }
+        return materialData
+
+    def collectObjectProps(self, rootObject, data):
+        numObjects = int(ObjectGetChildCount(rootObject))
+        for i in range(0, numObjects):
+            obj = ObjectGetChild(rootObject, i)
+            materialName = ObjectGetMaterial(obj)
+            if len(materialName) > 0:
+                if not materialName in data['materials']:
+                    materialData = self.getMaterialProps(materialName)
+                    data['materials'][materialName] = materialData
+            objData = self.getObjectProps(obj)
+            data['objects'].append(objData)
+            self.collectObjectProps(obj, data)
+    
+    def getMapProps(self):
+        data = {
+            'name': 'My Scene', #TODO: mapName
+            'author': 'Me', #TODO: mapAuthor
+            'copyright': '(C) 2020', #TODO: mapCopyright
+            'objects': [],
+            'materials': {}
+        }
+        self.collectObjectProps(self.map, data)
+        return data
+
+    def jsonString(self, data):
+        return json.dumps(data, indent = 4, separators = (',', ': '))
 
 app = EditorApplication(1280, 720, 'Xtreme3D Editor')
 app.run()
