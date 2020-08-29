@@ -1,14 +1,16 @@
 import sys
 from cx_Freeze import setup, Executable
 
-mainScript = 'editor.py'
+mainScript = 'src/editor.py'
 
 if '--script' in sys.argv:
     index = sys.argv.index('--script')
     sys.argv.pop(index)
     mainScript = sys.argv.pop(index)
 
-executable = Executable(script=mainScript, icon='icon.ico', base = 'Win32GUI')
+sys.path.append('src')
+
+executable = Executable(script = mainScript, icon = 'icon.ico', base = 'Win32GUI')
 
 include = [
     'data',
