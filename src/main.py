@@ -14,7 +14,7 @@ from pluginbase import PluginBase
 root = Tkinter.Tk()
 root.withdraw()
 
-supportedFiles = [
+supportedImportFormats = [
     ('All files', '*.*'),
     ('Quake 3 BSP', '*.bsp'),
     ('Blitz3D B3D', '*.b3d'),
@@ -64,6 +64,7 @@ class EditorApplication(Framework):
     previousMouseX = 0
     previousMouseY = 0
     dragAxis = -1
+    
     actions = {
         'keyDown': [],
         'keyUp': [],
@@ -72,6 +73,13 @@ class EditorApplication(Framework):
         'mouseClick': [],
         'selectObject': [],
         'unselectObject': []
+    }
+    
+    supportedExportFormats = [
+        ('All files', '*.*')
+    ]
+    
+    exporters = {
     }
 
     def start(self):
@@ -247,20 +255,32 @@ class EditorApplication(Framework):
             self.logWarning("Unsupported event: \"%s\"" % (event))
     
     #TODO: registerImporter(self, format, func)
-    #TODO: registerExporter(self, format, func)
+    
+    def registerExporter(self, format, mask, func):
+        self.supportedExportFormats.append((format, mask))
+        name, ext = os.path.splitext(mask)
+        self.exporters[ext] = func
     
     def callActions(self, event, params):
         if event in self.actions:
             for action in self.actions[event]:
                 action(self, params)
     
+    def exportMap(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext in self.exporters:
+            self.exporters[ext](self, filename)
+    
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
-            filePath = tkFileDialog.askopenfilename(filetypes = supportedFiles)
+            filePath = tkFileDialog.askopenfilename(filetypes = supportedImportFormats)
             #TODO: check extension
             ffMatlib = MaterialLibraryCreate();
             #TODO: copy mesh to scene and set texture path for ffMatlib
             ff = FreeformCreate(filePath, ffMatlib, ffMatlib, self.map)
+        if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
+            filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
+            self.exportMap(filePath)
         self.callActions('keyDown', Event(key = key))
             
     def onKeyUp(self, key):
