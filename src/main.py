@@ -64,6 +64,45 @@ class Event:
         self.button = kwargs.get('button', KEY_UNKNOWN)
         self.object = kwargs.get('object', 0)
 
+class X3DObject:
+    id = 0
+    name = ''
+    filename = ''
+    
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+    
+    def getProps(self):
+        obj = self.id
+        name = ObjectGetName(obj)
+        tag = int(ObjectGetTag(obj))
+        className = ObjectGetClassName(obj)
+        parent = ObjectGetParent(obj)
+        parentTag = 0
+        if parent != 0:
+            parentTag = int(ObjectGetTag(parent))
+        position = [
+            ObjectGetPositionX(obj),
+            ObjectGetPositionY(obj),
+            ObjectGetPositionZ(obj)
+        ]
+        rotation = [0, 0, 0] #TODO
+        scale = [1, 1, 1] #TODO
+        materialName = ObjectGetMaterial(obj)
+        data = {
+            'name': name,
+            'tag': tag,
+            'class': className,
+            'parent': parentTag,
+            'position': position,
+            'rotation': rotation,
+            'scale': scale,
+            'material': materialName,
+            'filename': self.filename
+        }
+        return data
+
 class EditorApplication(Framework):
     mapName = 'My Map'
     mapAuthor = userName
@@ -98,6 +137,8 @@ class EditorApplication(Framework):
     
     importers = {
     }
+    
+    x3dObjects = []
 
     def start(self):
         self.keycodes = keycodes
@@ -496,60 +537,18 @@ class EditorApplication(Framework):
             tag = self.makeUniqueTag()
             ObjectSetName(obj, name)
             ObjectSetTag(obj, tag)
-            #TODO: keep in metadata
+            self.x3dObjects.append(X3DObject(obj, name))
             return obj
         else:
             self.logError('Unsupported object class: %s' % className)
             return 0
-
-    def getObjectProps(self, obj):
-        name = ObjectGetName(obj)
-        tag = int(ObjectGetTag(obj))
-        className = ObjectGetClassName(obj)
-        parent = ObjectGetParent(obj)
-        parentTag = 0
-        if parent != 0:
-            parentTag = int(ObjectGetTag(parent))
-        position = [
-            ObjectGetPositionX(obj),
-            ObjectGetPositionY(obj),
-            ObjectGetPositionZ(obj)
-        ]
-        rotation = [0, 0, 0] #TODO
-        scale = [1, 1, 1] #TODO
-        materialName = ObjectGetMaterial(obj)
-        objData = {
-            'name': name,
-            'tag': tag,
-            'class': className,
-            'parent': parentTag,
-            'position': position,
-            'rotation': rotation,
-            'scale': scale,
-            'material': materialName
-            #TODO: filename
-        }
-        return objData
     
     def getMaterialProps(self, materialName):
         materialData = {
             'name': materialName
-            #TODO: props from editor
+            #TODO: props from metadata
         }
         return materialData
-
-    def collectObjectProps(self, rootObject, data):
-        numObjects = int(ObjectGetChildCount(rootObject))
-        for i in range(0, numObjects):
-            obj = ObjectGetChild(rootObject, i)
-            materialName = ObjectGetMaterial(obj)
-            if len(materialName) > 0:
-                if not materialName in data['materials']:
-                    materialData = self.getMaterialProps(materialName)
-                    data['materials'][materialName] = materialData
-            objData = self.getObjectProps(obj)
-            data['objects'].append(objData)
-            self.collectObjectProps(obj, data)
     
     def getMapProps(self):
         data = {
@@ -559,7 +558,15 @@ class EditorApplication(Framework):
             'objects': [],
             'materials': {}
         }
-        self.collectObjectProps(self.map, data)
+        for x3dObject in self.x3dObjects:
+            obj = x3dObject.id
+            materialName = ObjectGetMaterial(obj)
+            if len(materialName) > 0:
+                if not materialName in data['materials']:
+                    materialData = self.getMaterialProps(materialName)
+                    data['materials'][materialName] = materialData
+            objData = x3dObject.getProps()
+            data['objects'].append(objData)
         return data
 
     def jsonString(self, data):
