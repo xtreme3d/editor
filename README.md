@@ -19,8 +19,10 @@ python setup.py build
 - Right mouse button + WASD - navigate through the scene
 - Left mouse button - select object
 - Arrow keys - move selected object
-- Ctrl+I - import a mesh
-- Ctrl+Down - put object on ground
+- Ctrl+O - open scene
+- Ctrl+S - save scene
+- Ctrl+I - import mesh
+- Ctrl+Down - put selected object on ground
 
 ## License
 Copyright (c) 2020 Timur Gafarov. Distributed under the Boost Software License, Version 1.0.
