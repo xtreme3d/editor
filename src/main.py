@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os.path
+import shutil
 import getpass
 import math
 import time
@@ -184,7 +185,8 @@ class EditorApplication(Framework):
         MaterialLibrarySetTexturePaths(self.internalMatlib, 'data')
         
         self.matlib = MaterialLibraryCreate()
-        MaterialLibrarySetTexturePaths(self.matlib, 'data')
+        # TODO
+        #MaterialLibrarySetTexturePaths(self.matlib, 'data')
         MaterialLibraryActivate(self.matlib)
 
         self.objects = DummycubeCreate(0)
@@ -357,7 +359,8 @@ class EditorApplication(Framework):
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshFormats)
-            self.importModel(filePath)
+            if len(filePath) > 0:
+                self.importModel(filePath)
         if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
             filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
             self.exportMap(filePath)
@@ -551,7 +554,9 @@ class EditorApplication(Framework):
             tag = self.makeUniqueTag()
             ObjectSetName(obj, name)
             ObjectSetTag(obj, tag)
-            self.x3dObjects.append(X3DObject(obj, name))
+            x3dObject = X3DObject(obj, name)
+            x3dObject.filename = filename
+            self.x3dObjects.append(x3dObject)
             return obj
         else:
             self.logError('Unsupported object class: %s' % className)
@@ -585,6 +590,23 @@ class EditorApplication(Framework):
 
     def jsonString(self, data):
         return json.dumps(data, indent = 4, separators = (',', ': '))
+
+    def dirName(self, path):
+        return os.path.dirname(path)
+
+    def baseName(self, path):
+        return os.path.basename(path)
+
+    def makeDir(self, dir):
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
+        os.makedirs(dir)
+
+    def copyFile(self, filename, dir):
+        name = os.path.basename(filename)
+        newFilename = dir + '/' + name
+        if filename != newFilename:
+            shutil.copy2(filename, dir)
 
 app = EditorApplication(1280, 720, 'Xtreme3D Editor')
 app.run()
