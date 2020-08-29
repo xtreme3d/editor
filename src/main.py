@@ -87,8 +87,16 @@ class X3DObject:
             ObjectGetPositionY(obj),
             ObjectGetPositionZ(obj)
         ]
-        rotation = [0, 0, 0] #TODO
-        scale = [1, 1, 1] #TODO
+        rotation = [
+            ObjectGetPitch(obj),
+            ObjectGetTurn(obj),
+            ObjectGetRoll(obj)
+        ]
+        scale = [
+            ObjectGetScale(obj, 0),
+            ObjectGetScale(obj, 1),
+            ObjectGetScale(obj, 2)
+        ]
         materialName = ObjectGetMaterial(obj)
         data = {
             'name': name,
