@@ -1,5 +1,5 @@
 def exportX3D(app, filename):
-    print('Export %s...' % filename)
+    app.logMessage('Export %s...' % filename)
     modelsDir = app.dirName(filename) + '/models'
     texturesDir = app.dirName(filename) + '/textures'
     app.makeDir(modelsDir)
@@ -52,7 +52,7 @@ def exportX3D(app, filename):
     app.saveJSON(filename, data)
 
 def importX3D(app, filename):
-    print('Import %s...' % filename)
+    app.logMessage('Import %s...' % filename)
     dir = app.dirName(filename)
     data = app.loadJSON(filename)
     app.mapName = data['name']

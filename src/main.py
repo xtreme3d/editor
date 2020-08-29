@@ -344,6 +344,10 @@ class EditorApplication(Framework):
         name, ext = os.path.splitext(filename)
         if ext in self.exporters:
             self.exporters[ext](self, filename)
+        else:
+            msg = 'Unsupported scene format: ' + ext
+            self.logWarning(msg)
+            self.showMessage('Warning', 'Unsupported scene format')
     
     def importMap(self, filename):
         name, ext = os.path.splitext(filename)
@@ -355,6 +359,10 @@ class EditorApplication(Framework):
             self.lastIndexForClass = {}
             self.lastTag = 0
             self.importers[ext](self, filename)
+        else:
+            msg = 'Unsupported scene format: ' + ext
+            self.logWarning(msg)
+            self.showMessage('Warning', 'Unsupported scene format')
     
     def importModel(self, filename):
         name, ext = os.path.splitext(filename)
@@ -367,6 +375,9 @@ class EditorApplication(Framework):
             msg = 'Unsupported mesh format: ' + ext
             self.logWarning(msg)
             self.showMessage('Warning', 'Unsupported mesh format')
+    
+    def onDropFile(self, filename):
+        self.importMap(filename)
     
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):

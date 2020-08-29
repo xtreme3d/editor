@@ -92,6 +92,9 @@ class Framework:
     def onWindowResize(self, width, height):
         pass
     
+    def onDropFile(self, filename):
+        pass
+    
     def keyPressed(self, key):
         return self._keyPressed[key]
     
@@ -145,7 +148,8 @@ class Framework:
                         self.halfWindowWidth = self.windowWidth / 2
                         self.halfWindowHeight = self.windowHeight / 2
                         self.onWindowResize(event.window.data1, event.window.data2)
-
+                elif event.type == sdl2.SDL_DROPFILE:
+                    self.onDropFile(event.drop.file)
             self.currentTime = sdl2.SDL_GetTicks()
             elapsedTime = self.currentTime - self.lastTime
             self.lastTime = self.currentTime

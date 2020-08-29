@@ -17,6 +17,7 @@ packages = [
 include = [
     'data',
     'plugins',
+    'sample_scene',
     'freetype.dll',
     'SDL2.dll',
     'xtreme3d.dll'
