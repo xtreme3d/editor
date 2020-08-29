@@ -105,12 +105,24 @@ class X3DObject:
         self.className = className
         self.index = uniqueIndex()
     
-    def getParentObject(self):
+    def setName(self, name):
+        self.name = name
+        ObjectSetName(self.id, name)
+    
+    def setParentByIndex(self, parentIndex):
+        parent = app.getObjectByIndex(parentIndex)
+        if not parent is None:
+            ObjectSetParent(self.id, parent.id)
+    
+    def getParent(self):
         parentId = ObjectGetParent(self.id)
         for obj in self.app.objects:
             if obj.id == parentId:
                 return obj
         return None
+
+    def setPosition(self, x, y, z):
+        ObjectSetPosition(self.id, x, y, z)
 
     def getPosition(self):
         return [
@@ -119,12 +131,18 @@ class X3DObject:
             ObjectGetPositionZ(self.id)
         ]
     
+    def setRotation(self, p, t, r):
+        ObjectSetRotation(self.id, p, t, r)
+    
     def getRotation(self):
         return [
             ObjectGetPitch(self.id),
             ObjectGetTurn(self.id),
             ObjectGetRoll(self.id)
         ]
+    
+    def setScale(self, x, y, z):
+        ObjectSetScale(self.id, x, y, z)
     
     def getScale(self):
         return [
@@ -357,10 +375,12 @@ class EditorApplication(Framework):
                 self.importModel(filePath)
         if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
             filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
-            self.exportMap(filePath)
+            if len(filePath) > 0:
+                self.exportMap(filePath)
         if self.keyComboPressed(KEY_O, KEY_LCTRL) or self.keyComboPressed(KEY_O, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = self.supportedImportFormats)
-            self.importMap(filePath)
+            if len(filePath) > 0:
+                self.importMap(filePath)
         self.callActions('keyDown', Event(key = key))
             
     def onKeyUp(self, key):
@@ -508,7 +528,7 @@ class EditorApplication(Framework):
 
     # Map API
     
-    def addObject(self, className, filename, matlib, parentId):
+    def addObject(self, className, filename, parentId = 0):
         if parentId == 0:
             parentId = self.map
         className = unicode(className)
@@ -525,14 +545,14 @@ class EditorApplication(Framework):
             'TGLDodecahedron': lambda: DodecahedronCreate(parentId),
             'TGLIcosahedron': lambda: IcosahedronCreate(parentId),
             'TGLTeapot': lambda: TeapotCreate(parentId),
-            'TGLFreeform': lambda: FreeformCreate(filename, matlib, matlib, parentId),
-            'TGLActor': lambda: ActorCreate(filename, matlib, parentId)
+            'TGLFreeform': lambda: FreeformCreate(filename, self.matlib, self.matlib, parentId),
+            'TGLActor': lambda: ActorCreate(filename, self.matlib, parentId)
         }
         if className in creators:
             id = creators[className]()
             obj = X3DObject(self, id, className)
             obj.filename = filename
-            parentObj = obj.getParentObject()
+            parentObj = obj.getParent()
             obj.parentIndex = 0
             if not parentObj is None:
                 obj.parentIndex = parentObj.index

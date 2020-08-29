@@ -61,6 +61,7 @@ def importX3D(app, filename):
     
     #TODO: load materials
     
+    # Create objects
     for objData in data['objects']:
         index = objData['index']
         name = objData['name']
@@ -72,21 +73,20 @@ def importX3D(app, filename):
         position = objData['position']
         rotation = objData['rotation']
         scale = objData['scale']
-        obj = app.addObject(className, objFilename, app.matlib, 0)
+        obj = app.addObject(className, objFilename)
         obj.index = index
         obj.parentIndex = parentIndex
-        app.x3d.ObjectSetName(obj.id, name)
-        app.x3d.ObjectSetPosition(obj.id, position[0], position[1], position[2])
-        app.x3d.ObjectSetRotation(obj.id, rotation[0], rotation[1], rotation[2])
-        app.x3d.ObjectSetScale(obj.id, scale[0], scale[1], scale[2])
+        obj.setName(name)
+        obj.setPosition(position[0], position[1], position[2])
+        obj.setRotation(rotation[0], rotation[1], rotation[2])
+        obj.setScale(scale[0], scale[1], scale[2])
     
+    # Assign parents to created objects
     for obj in app.objects:
         id = obj.id
         if id == 0:
             self.logError('Invalid object')
-        parent = app.getObjectByIndex(obj.parentIndex)
-        if not parent is None:
-            app.x3d.ObjectSetParent(id, parent.id)
+        obj.setParentByIndex(obj.parentIndex)
 
 def setup(app):
     description = 'Xtreme3D Editor Scene'

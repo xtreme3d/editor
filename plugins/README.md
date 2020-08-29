@@ -38,7 +38,7 @@ Instead of `'eventName'` use the following:
 
 Useful properties:
 - `app.x3d` - namespace for Xtreme3D functions (e.g. `app.x3d.ObjectSetPosition(obj, 0, 1, 4)`)
-- `app.objects` - editable objects
+- `app.objects` - scene objects
 - `app.selectedObject` - currently selected object id (or 0 if nothing selected)
 - `app.camera` - editor camera id
 - `app.navigator` - default navigator id of the `app.camera`
@@ -61,7 +61,7 @@ Useful methods:
 - `app.keyComboPressed(key1, key2)` - if two keys are pressed
 - `app.mouseButtonPressed(button)` - if mouse button is pressed
 - `app.mouseComboPressed(button, key)` - if mouse button and a key are pressed
-- `app.addObject(className, filename, matlib, parent)` - add Xtreme3D object by className
+- `app.addObject(className, filename, parentId)` - add Xtreme3D object by className
 - `app.getObjectById(id)` - select object by Xtreme3D id
 - `app.getObjectByIndex(index)` - select object by editor index
 - `app.selectObject(obj)` - select an object
