@@ -145,21 +145,11 @@ class EditorApplication(Framework):
         self.map = DummycubeCreate(self.scene)
         ObjectSetName(self.map, 'map')
         
-        obj = self.addTopLevelObject('TGLCube', '')
+        obj = self.addObject('TGLDodecahedron', '', self.matlib, self.map)
         ObjectSetPosition(obj, 2, 0, 0)
         
-        obj = self.addTopLevelObject('TGLCube', '')
+        obj = self.addObject('TGLTeapot', '', self.matlib, self.map)
         ObjectSetPosition(obj, 4, 0, 0)
-        
-        """
-        self.sphere0 = SphereCreate(0.25, 16, 8, self.map)
-        ObjectSetPosition(self.sphere0, 1, 0.25, 1)
-        ObjectSetName(self.sphere0, 'sphere0')
-        
-        self.cube0 = CubeCreate(0.5, 0.5, 0.5, self.map)
-        ObjectSetPosition(self.cube0, 2, 0.25, 1)
-        ObjectSetName(self.cube0, 'cube0')
-        """
         
         """
         bump = BumpShaderCreate();
@@ -295,13 +285,15 @@ class EditorApplication(Framework):
             # TODO: delete all materials
             self.importers[ext](self, self.map, filename)
     
+    def importModel(self, filename):
+        #TODO: check by extension - TGLFreeform or TGLActor
+        #TODO: copy model file to scene folder
+        obj = self.addObject('TGLFreeform', filePath, self.matlib, self.map)
+    
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshImportFormats)
-            #TODO: check extension
-            ffMatlib = MaterialLibraryCreate();
-            #TODO: copy mesh to scene and set texture path for ffMatlib
-            ff = FreeformCreate(filePath, ffMatlib, ffMatlib, self.map)
+            self.importModel(filePath)
         if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
             filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
             self.exportMap(filePath)
@@ -455,8 +447,7 @@ class EditorApplication(Framework):
 
     # Map API
     
-    lastIndexForClass = {
-    }
+    lastIndexForClass = {}
     
     def makeUniqueNameFrom(self, name):
         if name in self.lastIndexForClass:
@@ -468,25 +459,47 @@ class EditorApplication(Framework):
             self.lastIndexForClass[name] = 0
             return name + str(index)
     
-    def addTopLevelObject(self, className, filename):
+    lastTag = 0
+    def makeUniqueTag(self):
+        self.lastTag += 1
+        return self.lastTag
+    
+    def addObject(self, className, filename, matlib, parent):
         creators = {
-            'TGLCube': lambda: CubeCreate(1, 1, 1, self.map)
+            'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parent),
+            'TGLCube': lambda: CubeCreate(1, 1, 1, parent),
+            'TGLSphere': lambda: SphereCreate(1, 16, 8, parent),
+            'TGLCylinder': lambda: CylinderCreate(1, 1, 1, 16, 1, 1, parent),
+            'TGLCone': lambda: ConeCreate(1, 1, 16, 1, 1, parent),
+            'TGLAnnulus': lambda: AnnulusCreate(0.5, 1, 1, 16, 1, 1, parent),
+            'TGLTorus': lambda: TorusCreate(0.5, 1, 16, 8, parent),
+            'TGLDisk': lambda: DiskCreate(0.5, 1, 0.0, 360.0, 1, 16, parent),
+            'TGLFrustum': lambda: FrustrumCreate(1, 1, 1, 0.5, parent),
+            'TGLDodecahedron': lambda: DodecahedronCreate(parent),
+            'TGLIcosahedron': lambda: IcosahedronCreate(parent),
+            'TGLTeapot': lambda: TeapotCreate(parent),
+            'TGLFreeform': lambda: FreeformCreate(filename, matlib, matlib, parent),
+            'TGLActor': lambda: ActorCreate(filename, matlib, parent)
         }
         if className in creators:
             obj = creators[className]()
             name = self.makeUniqueNameFrom(className)
+            tag = self.makeUniqueTag()
             ObjectSetName(obj, name)
+            ObjectSetTag(obj, tag)
+            #TODO: keep in metadata
             return obj
         else:
             return 0
 
     def getObjectProps(self, obj):
         name = ObjectGetName(obj)
+        tag = int(ObjectGetTag(obj))
         className = ObjectGetClassName(obj)
         parent = ObjectGetParent(obj)
-        parentName = 'map'
+        parentTag = 0
         if parent != 0:
-            parentName = ObjectGetName(parent)
+            parentTag = int(ObjectGetTag(parent))
         position = [
             ObjectGetPositionX(obj),
             ObjectGetPositionY(obj),
@@ -497,8 +510,9 @@ class EditorApplication(Framework):
         materialName = ObjectGetMaterial(obj)
         objData = {
             'name': name,
+            'tag': tag,
             'class': className,
-            'parent': parentName,
+            'parent': parentTag,
             'position': position,
             'rotation': rotation,
             'scale': scale,

@@ -21,7 +21,7 @@ python setup.py build
 - Arrow keys - move selected object
 - Ctrl+O - open scene
 - Ctrl+S - save scene
-- Ctrl+I - import mesh
+- Ctrl+I - import model
 - Ctrl+Down - put selected object on ground
 
 ## License
