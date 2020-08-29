@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import os.path
+import getpass
 import math
 import time
+import datetime
 import ctypes
 import Tkinter, tkFileDialog
 import logging
@@ -11,6 +13,9 @@ import json
 from framework import *
 from framework import keycodes
 from pluginbase import PluginBase
+
+now = datetime.datetime.now()
+userName = getpass.getuser()
 
 root = Tkinter.Tk()
 root.withdraw()
@@ -60,6 +65,10 @@ class Event:
         self.object = kwargs.get('object', 0)
 
 class EditorApplication(Framework):
+    mapName = 'My Map'
+    mapAuthor = userName
+    mapCopyright = 'Copyright (C) %s %s' % (now.year, userName)
+
     selectedObject = 0
     mouseSensibility = 0.3
     previousMouseX = 0
@@ -544,9 +553,9 @@ class EditorApplication(Framework):
     
     def getMapProps(self):
         data = {
-            'name': 'My Scene', #TODO: mapName
-            'author': 'Me', #TODO: mapAuthor
-            'copyright': '(C) 2020', #TODO: mapCopyright
+            'name': self.mapName,
+            'author': self.mapAuthor,
+            'copyright': self.mapCopyright, 
             'objects': [],
             'materials': {}
         }
