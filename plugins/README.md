@@ -2,7 +2,7 @@
 Put your plugins here. Plugins are Python 2.7 scripts.
 
 ## Usage
-Each plugin should contain `setup` function and can register actions and scene exporters:
+Each plugin should contain `setup` function and can register actions and scene exporters/importers:
 
 ```python
 def actionFunction(app, event):
@@ -10,14 +10,19 @@ def actionFunction(app, event):
     pass
 
 def exporterFunction(app, map, filename):
-    print(filename)
     f = open(filename, 'w')
     f.write('SomeData')
+    f.close()
+
+def importerFunction(app, map, filename):
+    f = open(filename, 'r')
+    # ...
     f.close()
 
 def setup(app):
     app.registerAction('eventName', actionFunction)
     app.registerExporter('My Scene Format', '*.msf', exporterFunction)
+    app.registerImporter('My Scene Format', '*.msf', importerFunction)
 ```
 
 Instead of `'eventName'` use the following:
@@ -52,6 +57,7 @@ Useful properties:
 Useful methods:
 - `app.registerAction(eventName, func)` - register action for an event
 - `app.registerExporter(formatDescription, fileMask, func)` - register exporter for a given format
+- `app.registerImporter(formatDescription, fileMask, func)` - register importer for a given format
 - `app.logMessage(msg)` - print a message to `editor.log`
 - `app.logWarning(msg)` - print a warning message to `editor.log`
 - `app.logError(msg)` - print an error message to `editor.log`, then exit
