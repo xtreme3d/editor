@@ -344,9 +344,12 @@ class EditorApplication(Framework):
             self.importers[ext](self, self.map, filename)
     
     def importModel(self, filename):
-        #TODO: check by extension - TGLFreeform or TGLActor
         #TODO: copy model file to scene folder
-        obj = self.addObject('TGLFreeform', filePath, self.matlib, self.map)
+        name, ext = os.path.splitext(filename)
+        if ext in ['.md2', '.md3', '.md5', '.smd', '.mdc']:
+            obj = self.addObject('TGLActor', filename, self.matlib, self.map)
+        else:
+            obj = self.addObject('TGLFreeform', filename, self.matlib, self.map)
     
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
