@@ -325,7 +325,7 @@ class EditorApplication(Framework):
     def exportMap(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in self.exporters:
-            self.exporters[ext](self, self.map, filename)
+            self.exporters[ext](self, filename)
     
     def importMap(self, filename):
         name, ext = os.path.splitext(filename)
@@ -336,7 +336,7 @@ class EditorApplication(Framework):
             self.objects = []
             self.lastIndexForClass = {}
             self.lastTag = 0
-            self.importers[ext](self, self.map, filename)
+            self.importers[ext](self, filename)
     
     def importModel(self, filename):
         name, ext = os.path.splitext(filename)
@@ -509,6 +509,8 @@ class EditorApplication(Framework):
     # Map API
     
     def addObject(self, className, filename, matlib, parentId):
+        if parentId == 0:
+            parentId = self.map
         className = unicode(className)
         creators = {
             'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parentId),

@@ -1,4 +1,4 @@
-def exportX3D(app, map, filename):
+def exportX3D(app, filename):
     print('Export %s...' % filename)
     modelsDir = app.dirName(filename) + '/models'
     texturesDir = app.dirName(filename) + '/textures'
@@ -51,7 +51,7 @@ def exportX3D(app, map, filename):
     
     app.saveJSON(filename, data)
 
-def importX3D(app, map, filename):
+def importX3D(app, filename):
     print('Import %s...' % filename)
     dir = app.dirName(filename)
     data = app.loadJSON(filename)
@@ -72,7 +72,7 @@ def importX3D(app, map, filename):
         position = objData['position']
         rotation = objData['rotation']
         scale = objData['scale']
-        obj = app.addObject(className, objFilename, app.matlib, map)
+        obj = app.addObject(className, objFilename, app.matlib, 0)
         obj.index = index
         obj.parentIndex = parentIndex
         app.x3d.ObjectSetName(obj.id, name)

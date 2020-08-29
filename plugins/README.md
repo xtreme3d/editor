@@ -9,12 +9,12 @@ def actionFunction(app, event):
     # ...
     pass
 
-def exporterFunction(app, map, filename):
+def exporterFunction(app, filename):
     f = open(filename, 'w')
     f.write('SomeData')
     f.close()
 
-def importerFunction(app, map, filename):
+def importerFunction(app, filename):
     f = open(filename, 'r')
     # ...
     f.close()
