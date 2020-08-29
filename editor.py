@@ -49,6 +49,15 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 pluginBase = PluginBase(package = 'editorPlugins')
 
+class Event:
+    key = KEY_UNKNOWN
+    button = KEY_UNKNOWN
+    object = 0
+    def __init__(self, *args, **kwargs):
+        self.key = kwargs.get('key', KEY_UNKNOWN)
+        self.button = kwargs.get('button', KEY_UNKNOWN)
+        self.object = kwargs.get('object', 0)
+
 class EditorApplication(Framework):
     selectedObject = 0
     mouseSensibility = 0.3
@@ -225,9 +234,11 @@ class EditorApplication(Framework):
         
     def logError(self, msg):
         logging.error(msg)
+        self.showMessage('Error', msg)
+        self.running = False
     
-    def message(self, title, text, style):
-        messageBox(title, text, style)
+    def showMessage(self, title, text):
+        messageBox(title, text, 0)
     
     def registerAction(self, event, func):
         if event in self.actions:
@@ -244,16 +255,16 @@ class EditorApplication(Framework):
                 action(self, params)
     
     def onKeyDown(self, key):
-        if key == KEY_I and (self.keyPressed(KEY_LCTRL) or self.keyPressed(KEY_RCTRL)):
+        if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = supportedFiles)
             #TODO: check extension
             ffMatlib = MaterialLibraryCreate();
             #TODO: copy mesh to scene and set texture path for ffMatlib
             ff = FreeformCreate(filePath, ffMatlib, ffMatlib, self.map)
-        self.callActions('keyDown', { 'key': key })
+        self.callActions('keyDown', Event(key = key))
             
     def onKeyUp(self, key):
-        self.callActions('keyUp', { 'key': key })
+        self.callActions('keyUp', Event(key = key))
             
     def onMouseButtonDown(self, button):
         self.dragOriginX = self.mouseX
@@ -269,10 +280,10 @@ class EditorApplication(Framework):
                 self.dragAxis = 2
             else:
                 self.dragAxis = -1
-        self.callActions('mouseButtonDown', { 'button': button })
+        self.callActions('mouseButtonDown', Event(button = button))
         
     def onMouseButtonUp(self, button):
-        self.callActions('mouseButtonUp', { 'button': button })
+        self.callActions('mouseButtonUp', Event(button = button))
     
     def onClick(self, button):
         if button == MB_LEFT:
@@ -286,21 +297,21 @@ class EditorApplication(Framework):
                 self.selectObject(pickedObj)
             else:
                 self.unselectObjects()
-        self.callActions('mouseClick', { 'button': button })
+        self.callActions('mouseClick', Event(button = button))
     
     def selectObject(self, obj):
         self.selectedObject = obj
         self.updateBoundingBox(obj)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
-        self.callActions('selectObject', { 'object': obj })
+        self.callActions('selectObject', Event(object = obj))
     
     def unselectObjects(self):
         if self.selectedObject != 0:
             obj = self.selectedObject
             ObjectHide(self.boundingBox)
             ObjectHide(self.gizmo)
-            self.callActions('unselectObject', { 'object': obj })
+            self.callActions('unselectObject', Event(object = obj))
             self.selectedObject = 0
     
     def updateBoundingBox(self, obj):
@@ -372,7 +383,7 @@ class EditorApplication(Framework):
         
         if self.selectedObject != 0:
             obj = self.selectedObject
-            if not self.keyPressed(KEY_LCTRL):
+            if not (self.keyPressed(KEY_LCTRL) or self.keyPressed(KEY_RCTRL)):
                 if self.keyPressed(KEY_LEFT): 
                     ObjectTranslate(obj, 0.1, 0, 0)
                     self.updateBoundingBox(obj)

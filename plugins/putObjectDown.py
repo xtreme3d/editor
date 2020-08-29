@@ -1,5 +1,5 @@
 def putObjectDown(app, event):
-    if event['key'] == app.keycodes.KEY_DOWN and app.keyPressed(app.keycodes.KEY_LCTRL):
+    if app.keyComboPressed(app.keycodes.KEY_LCTRL, app.keycodes.KEY_DOWN):
         if app.selectedObject != 0:
             obj = app.selectedObject
             app.x3d.ObjectHide(obj)

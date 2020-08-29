@@ -98,6 +98,12 @@ class Framework:
     def mouseButtonPressed(self, mb):
         return self._mouseButtonPressed[mb]
     
+    def keyComboPressed(self, key1, key2):
+        return self.keyPressed(key1) and self.keyPressed(key2)
+        
+    def mouseComboPressed(self, button, key):
+        return self.mouseButtonPressed(button) and self.keyPressed(key)
+    
     def run(self):
         event = sdl2.SDL_Event()
         while self.running:

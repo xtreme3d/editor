@@ -40,11 +40,22 @@ Useful properties:
 - `app.gizmo` - parent Dummycube for the 3D manipulator widgets
 - `app.font` - default font
 - `app.keycodes` - keyboard and mouse button codes (e.g. `app.keycodes.KEY_W`, `app.keycodes.MB_LEFT`). See `framework/keycodes.py` for a full list of codes.
+- `app.mouseX`, `app.mouseY` - mouse coordinates in a window
 
 Useful methods:
-- TODO
+- `app.registerAction(event, func)` - register action for an event
+- `app.logMessage(msg)` - print a message to `editor.log`
+- `app.logWarning(msg)` - print a warning message to `editor.log`
+- `app.logError(msg)` - print an error message to `editor.log`, then exit
+- `app.showMessage(title, msg)` - show a message box
+- `app.keyPressed(key)` - if key is pressed
+- `app.keyComboPressed(key1, key2)` - if two keys are pressed
+- `app.mouseButtonPressed(button)` - if mouse button is pressed
+- `app.mouseComboPressed(button, key)` - if mouse button and a key are pressed
+- `app.selectObject(obj)` - select an object
+- `app.unselectObjects()` - clear selection
 
-`event` parameter has the following properties depending on event type:
-- `event["key"]` - a key that is pressed or released
-- `event["button"]` - a mouse button that is pressed or released
-- `event["object"]` - an object that is selected or unselected
+`event` parameter has the following properties:
+- `event.key` - a key that is pressed or released
+- `event.button` - a mouse button that is pressed or released
+- `event.object` - an object that is selected or unselected
