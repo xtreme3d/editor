@@ -9,7 +9,7 @@ def actionFunction(app, event):
     # ...
     pass
 
-def exporterFunction(app, filename):
+def exporterFunction(app, map, filename):
     print(filename)
     f = open(filename, 'w')
     f.write('SomeData')

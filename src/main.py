@@ -14,7 +14,7 @@ from pluginbase import PluginBase
 root = Tkinter.Tk()
 root.withdraw()
 
-supportedImportFormats = [
+supportedMeshImportFormats = [
     ('All files', '*.*'),
     ('Quake 3 BSP', '*.bsp'),
     ('Blitz3D B3D', '*.b3d'),
@@ -80,6 +80,13 @@ class EditorApplication(Framework):
     ]
     
     exporters = {
+    }
+    
+    supportedImportFormats = [
+        ('All files', '*.*')
+    ]
+    
+    importers = {
     }
 
     def start(self):
@@ -254,12 +261,15 @@ class EditorApplication(Framework):
         else:
             self.logWarning("Unsupported event: \"%s\"" % (event))
     
-    #TODO: registerImporter(self, format, func)
-    
     def registerExporter(self, format, mask, func):
         self.supportedExportFormats.append((format, mask))
         name, ext = os.path.splitext(mask)
         self.exporters[ext] = func
+        
+    def registerImporter(self, format, mask, func):
+        self.supportedImportFormats.append((format, mask))
+        name, ext = os.path.splitext(mask)
+        self.importers[ext] = func
     
     def callActions(self, event, params):
         if event in self.actions:
@@ -269,11 +279,18 @@ class EditorApplication(Framework):
     def exportMap(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in self.exporters:
-            self.exporters[ext](self, filename)
+            self.exporters[ext](self, self.map, filename)
+    
+    def importMap(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext in self.importers:
+            ObjectDestroyChildren(self.map)
+            # TODO: delete all materials
+            self.importers[ext](self, self.map, filename)
     
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
-            filePath = tkFileDialog.askopenfilename(filetypes = supportedImportFormats)
+            filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshImportFormats)
             #TODO: check extension
             ffMatlib = MaterialLibraryCreate();
             #TODO: copy mesh to scene and set texture path for ffMatlib
@@ -281,6 +298,9 @@ class EditorApplication(Framework):
         if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
             filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
             self.exportMap(filePath)
+        if self.keyComboPressed(KEY_O, KEY_LCTRL) or self.keyComboPressed(KEY_O, KEY_RCTRL):
+            filePath = tkFileDialog.askopenfilename(filetypes = self.supportedImportFormats)
+            self.importMap(filePath)
         self.callActions('keyDown', Event(key = key))
             
     def onKeyUp(self, key):
