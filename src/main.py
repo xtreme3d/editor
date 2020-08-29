@@ -109,7 +109,7 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.camera, 0, 1, 5)
         CameraSetViewDepth(self.camera, 500)
         CameraSetFocal(self.camera, 120)
-        CameraSetSceneScale(self.camera, 1.1)
+        #CameraSetSceneScale(self.camera, 1.1)
         CameraSetNearPlaneBias(self.camera, 0.1)
         ViewerSetCamera(self.viewer, self.camera)
         self.navigator = NavigatorCreate()

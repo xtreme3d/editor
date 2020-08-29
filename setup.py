@@ -12,8 +12,8 @@ sys.path.append('src')
 
 executable = Executable(
     script = mainScript,
-    targetName = "editor.exe",
-    icon = 'icon.ico',
+    targetName = 'editor.exe',
+    icon = 'assets/editor.ico',
     base = 'Win32GUI')
 
 include = [
