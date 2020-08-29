@@ -20,7 +20,19 @@ userName = getpass.getuser()
 root = Tkinter.Tk()
 root.withdraw()
 
-supportedMeshImportFormats = [
+supportedMeshExtensions = [
+    '.bsp', '.b3d', '.lod', '.x', '.csm',
+    '.lmts', '.dxs', '.3ds', '.ase', '.obj',
+    '.lwo', '.ms3d', '.oct', '.nmf', '.wrl',
+    '.ply', '.gts', '.tin', '.stl', '.glsm',
+    '.md2', '.md3', '.md5', '.smd', '.mdc'
+]
+
+supportedAnimatedMeshExtensions = [
+    '.md2', '.md3', '.md5', '.smd', '.mdc'
+]
+
+supportedMeshFormats = [
     ('All files', '*.*'),
     ('Quake 3 BSP', '*.bsp'),
     ('Blitz3D B3D', '*.b3d'),
@@ -41,7 +53,12 @@ supportedMeshImportFormats = [
     ('GNU GTS', '*.gts'),
     ('Triangular Irregular Network TIN', '*.tin'),
     ('Stereolithography STL', '*.stl'),
-    ('GLScene GLSM', '*.glsm')
+    ('GLScene GLSM', '*.glsm'),
+    ('Quake 2 MD2', '*.md2'),
+    ('Quake 3 MD3', '*.md3'),
+    ('Doom 3 MD5', '*.md5'),
+    ('Half-Life SMD', '*.smd'),
+    ('Return To Castle Wolfenstein MDC', '*.mdc')
 ]
 
 logFilename = 'editor.log'
@@ -162,14 +179,18 @@ class EditorApplication(Framework):
         ViewerSetFogDistance(self.viewer, 50, 100)
         ViewerEnableVSync(self.viewer, vsmSync)
         ViewerSetAutoRender(self.viewer, False)
-
+        
+        self.internalMatlib = MaterialLibraryCreate()
+        MaterialLibrarySetTexturePaths(self.internalMatlib, 'data')
+        
         self.matlib = MaterialLibraryCreate()
-        MaterialLibrarySetTexturePaths(self.matlib, 'data;data/hellknight')
+        MaterialLibrarySetTexturePaths(self.matlib, 'data')
         MaterialLibraryActivate(self.matlib)
 
         self.objects = DummycubeCreate(0)
         self.back = DummycubeCreate(self.objects)
         self.scene = DummycubeCreate(self.objects)
+        self.map = DummycubeCreate(self.objects)
         self.front = DummycubeCreate(self.objects)
         
         ObjectShowAxes(self.scene, True)
@@ -184,13 +205,14 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.camera, 0, 1, 5)
         CameraSetViewDepth(self.camera, 500)
         CameraSetFocal(self.camera, 120)
-        #CameraSetSceneScale(self.camera, 1.1)
         CameraSetNearPlaneBias(self.camera, 0.1)
         ViewerSetCamera(self.viewer, self.camera)
         self.navigator = NavigatorCreate()
         NavigatorSetObject(self.navigator, self.camera)
         NavigatorSetUseVirtualUp(self.navigator, True)
         NavigatorSetVirtualUp(self.navigator, 0, 1, 0)
+        
+        MaterialLibraryActivate(self.internalMatlib)
         
         self.plane = PlaneCreate(0, 100, 100, 100, 100, self.scene)
         MaterialCreate('mGround', 'data/tiles.png')
@@ -199,8 +221,9 @@ class EditorApplication(Framework):
         ObjectSetMaterial(self.plane, 'mGround')
         ObjectPitch(self.plane, 90)
         
+        MaterialLibraryActivate(self.matlib)
+        
         # Objects that should be saved to file
-        self.map = DummycubeCreate(self.scene)
         ObjectSetName(self.map, 'map')
         
         obj = self.addObject('TGLDodecahedron', '', self.matlib, self.map)
@@ -208,31 +231,6 @@ class EditorApplication(Framework):
         
         obj = self.addObject('TGLTeapot', '', self.matlib, self.map)
         ObjectSetPosition(obj, 4, 0, 0)
-        
-        """
-        bump = BumpShaderCreate();
-        BumpShaderSetDiffuseTexture(bump, '')
-        BumpShaderSetNormalTexture(bump, '')
-        BumpShaderSetMaxLights(bump, 3)
-        BumpShaderUseAutoTangentSpace(bump, True)
-        MaterialCreate('mHellknight', 'diffuse.png')
-        MaterialCreate('mHellknightNormal', 'normal.png')
-        MaterialSetSecondTexture('mHellknight', 'mHellknightNormal')
-        MaterialSetShininess('mHellknight', 32)
-        MaterialSetAmbientColor('mHellknight', c_gray, 1)
-        MaterialSetDiffuseColor('mHellknight', c_white, 1)
-        MaterialSetSpecularColor('mHellknight', c_ltgray, 1)
-        MaterialSetShader('mHellknight', bump)
-
-        hk = ActorCreate('data/hellknight/hellknight.md5mesh', self.matlib, self.map)
-        ActorAddObject(hk, 'data/hellknight/idle.md5anim')
-        ActorAddObject(hk, 'data/hellknight/attack.md5anim')
-        ActorSwitchToAnimation(hk, 0, True)
-        ObjectSetScale(hk, 0.012, 0.012, 0.012)
-        ObjectSetPosition(hk, 0, 0, 0)
-        ObjectSetMaterial(hk, 'mHellknight')
-        ObjectSetName(hk, 'hellknight')
-        """
         
         # GUI widgets
         self.boundingBox = DummycubeCreate(self.scene)
@@ -340,20 +338,25 @@ class EditorApplication(Framework):
         name, ext = os.path.splitext(filename)
         if ext in self.importers:
             ObjectDestroyChildren(self.map)
-            # TODO: delete all materials
+            MaterialLibraryClear(self.matlib)
             self.importers[ext](self, self.map, filename)
     
     def importModel(self, filename):
         #TODO: copy model file to scene folder
         name, ext = os.path.splitext(filename)
-        if ext in ['.md2', '.md3', '.md5', '.smd', '.mdc']:
-            obj = self.addObject('TGLActor', filename, self.matlib, self.map)
+        if ext in supportedMeshExtensions:
+            if ext in supportedAnimatedMeshExtensions:
+                obj = self.addObject('TGLActor', filename, self.matlib, self.map)
+            else:
+                obj = self.addObject('TGLFreeform', filename, self.matlib, self.map)
         else:
-            obj = self.addObject('TGLFreeform', filename, self.matlib, self.map)
+            msg = 'Unsupported mesh format: ' + ext
+            self.logWarning(msg)
+            self.showMessage('Warning', 'Unsupported mesh format')
     
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
-            filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshImportFormats)
+            filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshFormats)
             self.importModel(filePath)
         if self.keyComboPressed(KEY_S, KEY_LCTRL) or self.keyComboPressed(KEY_S, KEY_RCTRL):
             filePath = tkFileDialog.asksaveasfilename(filetypes = self.supportedExportFormats, defaultextension = '*.*')
