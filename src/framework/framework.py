@@ -52,7 +52,6 @@ class Framework:
                       sdl2.SDL_WINDOWPOS_CENTERED, 
                       self.windowWidth, self.windowHeight,
                       sdl2.SDL_WINDOW_SHOWN | sdl2.SDL_WINDOW_RESIZABLE)
-        sdl2.SDL_WarpMouseInWindow(self.window, self.halfWindowWidth, self.halfWindowHeight)
         sdl2.SDL_ShowCursor(1)
         self.start()
         
