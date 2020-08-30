@@ -21,7 +21,7 @@
                 0.0
             ],
             "material": "",
-            "class": "TGLDodecahedron",
+            "class": "TGLCube",
             "parentIndex": 0
         },
         {

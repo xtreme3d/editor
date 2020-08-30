@@ -13,23 +13,35 @@ def exportX3D(app, filename):
         'materials': {}
     }
     
+    for mat in app.materials:
+        if len(mat.name) == 0:
+            self.logError('Invalid material')
+        print(mat.name)
+        print(mat.textures)
+        if not mat.name in data['materials']:
+            materialData = {
+                'textures': [''] * 16
+            }
+            for i in range(len(mat.textures)):
+                tex = mat.textures[i]
+                if len(tex) > 0:
+                    app.copyFile(tex, modelsDir)
+                    materialData['textures'][i] = 'textures/' + app.baseName(tex)
+            data['materials'][mat.name] = materialData
+    
     for obj in app.objects:
         id = obj.id
         if id == 0:
             self.logError('Invalid object')
         
-        materialName = obj.material
-        if len(materialName) > 0:
-            if not materialName in data['materials']:
-                materialData = {
-                    'name': materialName
-                }
-                data['materials'][materialName] = materialData
-        
         parentObj = obj.getParent()
         parentIndex = 0
         if not parentObj is None:
             parentIndex = parentObj.index
+        
+        materialName = ''
+        if not obj.material == None:
+            materialName = obj.material.name
         
         objData = {
             'name': obj.name,
@@ -39,7 +51,7 @@ def exportX3D(app, filename):
             'position': obj.getPosition(),
             'rotation': obj.getRotation(),
             'scale': obj.getScale(),
-            'material': obj.material,
+            'material': materialName,
             'filename': obj.filename
         }
         

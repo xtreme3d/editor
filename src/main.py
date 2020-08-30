@@ -34,6 +34,10 @@ supportedAnimatedMeshExtensions = [
     '.md2', '.md3', '.md5', '.smd', '.mdc'
 ]
 
+supportedImageExtensions = [
+    '.png', '.jpg', '.jpeg', '.bmp', '.tga', '.dds'
+]
+
 supportedMeshFormats = [
     ('All files', '*.*'),
     ('Quake 3 BSP', '*.bsp'),
@@ -96,7 +100,7 @@ class X3DObject:
     name = ''
     className = ''
     filename = ''
-    material = ''
+    material = None
     parentIndex = 0
     
     def __init__(self, app, id, className):
@@ -109,8 +113,12 @@ class X3DObject:
         self.name = name
         ObjectSetName(self.id, name)
     
+    def setMaterial(self, material):
+        self.material = material
+        ObjectSetMaterial(self.id, material.name)
+    
     def setParentByIndex(self, parentIndex):
-        parent = app.getObjectByIndex(parentIndex)
+        parent = self.app.getObjectByIndex(parentIndex)
         if not parent is None:
             ObjectSetParent(self.id, parent.id)
     
@@ -151,6 +159,22 @@ class X3DObject:
             ObjectGetScale(self.id, 2)
         ]
 
+class X3DMaterial:
+    name = ''
+    textures = None
+    
+    def __init__(self, name, filename):
+        self.name = name
+        MaterialCreate(self.name, filename)
+        self.textures = [''] * 16
+        if filename != '':
+            self.textures[0] = filename
+        print(self.textures)
+    
+    def setTexture(self, layer, filename):
+        self.textures[layer] = filename
+        MaterialLoadTextureEx(self.name, filename, layer)
+
 class EditorApplication(Framework):
     mapName = 'My Map'
     mapAuthor = userName
@@ -164,6 +188,8 @@ class EditorApplication(Framework):
     
     lastIndexForClass = {}
     lastTag = 0
+    
+    lastMaterialIndex = 0
     
     actions = {
         'keyDown': [],
@@ -190,6 +216,8 @@ class EditorApplication(Framework):
     }
     
     objects = []
+    materials = []
+    materialsByTexture = {}
 
     def start(self):
         self.keycodes = keycodes
@@ -304,8 +332,8 @@ class EditorApplication(Framework):
         for pluginName in self.pluginSource.list_plugins():
             plugin = self.pluginSource.load_plugin(pluginName)
             plugin.setup(self)
-        
-        self.setMouseToCenter()
+            
+        self.importMap('sample_scene/scene.x3d')
     
     def logMessage(self, msg):
         logging.info(msg)
@@ -360,13 +388,14 @@ class EditorApplication(Framework):
             self.lastTag = 0
             self.importers[ext](self, filename)
         else:
-            msg = 'Unsupported scene format: ' + ext
+            msg = 'Unsupported file format: ' + ext
             self.logWarning(msg)
             self.showMessage('Warning', 'Unsupported scene format')
     
     def importModel(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in supportedMeshExtensions:
+            self.logMessage('Importing model %s...' % filename)
             if ext in supportedAnimatedMeshExtensions:
                 obj = self.addObject('TGLActor', filename)
             else:
@@ -376,8 +405,43 @@ class EditorApplication(Framework):
             self.logWarning(msg)
             self.showMessage('Warning', 'Unsupported mesh format')
     
+    def importTexture(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext in supportedImageExtensions:
+            self.logMessage('Importing texture %s...' % filename)
+            material = self.addMaterial(filename)
+            if not material == None:
+                pickedObj = self.pickObject()
+                if pickedObj != None:
+                    pickedObj.setMaterial(material)
+                    #ObjectSetMaterial(pickedObj, material.name)
+        else:
+            msg = 'Unsupported texture format: ' + ext
+            self.logWarning(msg)
+            self.showMessage('Warning', 'Unsupported texture format')
+    
+    def pickObject(self):
+        ObjectHide(self.plane)
+        ObjectHide(self.front)
+        pickedObjId = ViewerGetPickedObject(self.viewer, self.mouseX, self.mouseY)
+        ObjectShow(self.front)
+        ObjectShow(self.plane)
+        if pickedObjId != 0:
+            return self.getObjectById(pickedObjId)
+        else:
+            return None
+    
+    def importFile(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext in self.importers:
+            self.importMap(filename)
+        elif ext in supportedMeshExtensions:
+            self.importModel(filename)
+        elif ext in supportedImageExtensions:
+            self.importTexture(filename)
+    
     def onDropFile(self, filename):
-        self.importMap(filename)
+        self.importFile(filename)
     
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
@@ -419,15 +483,9 @@ class EditorApplication(Framework):
     def onClick(self, button):
         if button == MB_LEFT:
             self.unselectObjects()
-            ObjectHide(self.plane)
-            ObjectHide(self.front)
-            pickedObj = ViewerGetPickedObject(self.viewer, self.mouseX, self.mouseY)
-            ObjectShow(self.front)
-            ObjectShow(self.plane)
-            if pickedObj != 0:
-                self.selectObject(pickedObj)
-            else:
-                self.unselectObjects()
+            pickedObj = self.pickObject()
+            if pickedObj != None:
+                self.selectObject(pickedObj.id)
         self.callActions('mouseClick', Event(button = button))
     
     def selectObject(self, id):
@@ -584,6 +642,31 @@ class EditorApplication(Framework):
             if obj.id == id:
                 return obj
         return None
+
+    def addMaterial(self, filename):
+        material = None
+        if filename != '':
+            print(self.materialsByTexture)
+            if not filename in self.materialsByTexture:
+                materialName = self.uniqueMaterialName()
+                self.logMessage('Creating material %s...' % materialName)
+                material = X3DMaterial(materialName, filename)
+                self.materialsByTexture[filename] = material
+                self.materials.append(material)
+            else:
+                material = self.materialsByTexture[filename]
+                self.logMessage('Texture %s already exists, using material %s' % (filename, material.name))
+        else:
+            materialName = self.uniqueMaterialName()
+            self.logMessage('Creating material %s...' % materialName)
+            material = X3DMaterial(materialName, '')
+            self.materials.append(material)
+        return material
+
+    def uniqueMaterialName(self):
+        name = 'material' + str(self.lastMaterialIndex)
+        self.lastMaterialIndex += 1
+        return name
 
     def saveJSON(self, filename, data):
         f = open(filename, 'w')
