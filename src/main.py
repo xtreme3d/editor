@@ -110,6 +110,15 @@ class X3DClickArea:
             SpriteSetBounds(self.iconId, 0, 0, 64, 64)
         MaterialLibraryActivate(app.matlib)
     
+    def mouseOver(self):
+        x = ObjectGetAbsolutePosition(self.iconId, 0)
+        y = ObjectGetAbsolutePosition(self.iconId, 1)
+        a = app.mouseX > x - self.iconSize * 0.5
+        b = app.mouseX < x + self.iconSize * 0.5
+        c = app.mouseY > y - self.iconSize * 0.5
+        d = app.mouseY < y + self.iconSize * 0.5 
+        return a and b and c and d
+    
     def cleanup(self):
         ObjectDestroy(self.iconId)
     
@@ -469,6 +478,10 @@ class EditorApplication(Framework):
             self.showMessage('Warning', 'Unsupported texture format')
     
     def pickObject(self):
+        for obj in self.objects:
+            clickArea = obj.clickArea
+            if clickArea.mouseOver():
+                return obj
         ObjectHide(self.plane)
         ObjectHide(self.front)
         pickedObjId = ViewerGetPickedObject(self.viewer, self.mouseX, self.mouseY)
