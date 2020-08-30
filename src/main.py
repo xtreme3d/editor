@@ -144,6 +144,7 @@ class X3DObject:
     name = ''
     filename = ''
     material = None
+    defaultMaterial = ''
     lightProperties = None
     clickArea = None
     properties = None
@@ -153,6 +154,11 @@ class X3DObject:
         self.id = id
         self.className = className
         self.index = uniqueIndex()
+        if self.className != 'TGLLightSource':
+            self.defaultMaterial = app.addMaterialOfName('__default%s' % self.index, '')
+            self.defaultMaterial.export = False
+            MaterialSetDiffuseColor(self.defaultMaterial.name, c_ltgray, 1.0)
+            ObjectSetMaterial(self.id, self.defaultMaterial.name)
         self.lightProperties = {
             'style': lsOmni,
             'ambientColor': c_black,
@@ -240,9 +246,17 @@ class X3DObject:
             
     #TODO: other light functions
 
+    def setShader(self, shaderId):
+        if self.className != 'TGLLightSource':
+            if self.material != None:
+                MaterialSetShader(self.material.name, shaderId)
+            else:
+                MaterialSetShader(self.defaultMaterial.name, shaderId)
+
 class X3DMaterial:
     name = ''
     textures = None
+    export = True
     
     def __init__(self, name, filename):
         self.name = name
@@ -331,6 +345,10 @@ class EditorApplication(Framework):
         ObjectSetName(self.map, 'map')
         
         # Internal objects
+        self.outlineShader = OutlineShaderCreate(0)
+        OutlineShaderSetLineColor(self.outlineShader, c_white)
+        OutlineShaderSetLineWidth(self.outlineShader, 4)
+        
         MaterialLibraryActivate(self.internalMatlib)
         
         self.camera = CameraCreate(self.scene)
@@ -408,6 +426,7 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.text, 20, 20, 0)
         
         MaterialLibraryActivate(self.matlib)
+        self.defaultMaterial = '__default__'
         
         self.pluginSource = pluginBase.make_plugin_source(
             searchpath = ['./plugins'],
@@ -415,7 +434,9 @@ class EditorApplication(Framework):
         for pluginName in self.pluginSource.list_plugins():
             plugin = self.pluginSource.load_plugin(pluginName)
             plugin.setup(self)
-            
+        
+        self.resetScene()
+        
         self.importMap('sample_scene/scene.x3d')
     
     def logMessage(self, msg):
@@ -451,6 +472,20 @@ class EditorApplication(Framework):
             for action in self.actions[event]:
                 action(self, params)
     
+    def resetScene(self):
+        self.unselectObjects()
+        for obj in self.objects:
+            obj.cleanup()
+        ObjectDestroyChildren(self.map)
+        ObjectDestroyChildren(self.icons)
+        MaterialLibraryClear(self.matlib)
+        self.objects = []
+        self.materials = []
+        self.clickAreas = []
+        lastIndex = 0
+        self.lastTag = 0
+        self.lastMaterialIndex = 0
+    
     def exportMap(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in self.exporters:
@@ -463,18 +498,7 @@ class EditorApplication(Framework):
     def importMap(self, filename):
         name, ext = os.path.splitext(filename)
         if ext in self.importers:
-            self.unselectObjects()
-            for obj in self.objects:
-                obj.cleanup()
-            ObjectDestroyChildren(self.map)
-            ObjectDestroyChildren(self.icons)
-            MaterialLibraryClear(self.matlib)
-            self.objects = []
-            self.materials = []
-            self.clickAreas = []
-            lastIndex = 0
-            self.lastTag = 0
-            self.lastMaterialIndex = 0
+            self.resetScene()
             self.importers[ext](self, filename)
             lastIndex = len(self.objects)
             self.lastMaterialIndex = len(self.materials)
@@ -603,11 +627,13 @@ class EditorApplication(Framework):
         self.updateBoundingBox(self.selectedObject)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
+        self.selectedObject.setShader(self.outlineShader)
         self.callActions('selectObject', Event(object = obj.id))
     
     def unselectObjects(self):
         if self.selectedObject != None:
             obj = self.selectedObject
+            obj.setShader(0)
             ObjectHide(self.boundingBox)
             ObjectHide(self.gizmo)
             self.callActions('unselectObject', Event(object = obj.id))
@@ -752,15 +778,11 @@ class EditorApplication(Framework):
 
     def addMaterialOfName(self, name, filename):
         material = None
-        #TODO: check if name already exists
         if not self.materialExists(name):
-            if filename != '':
-                material = X3DMaterial(name, filename)
-            else:
-                material = X3DMaterial(name, '')
+            material = X3DMaterial(name, filename)
             self.materials.append(material)
         else:
-            return self.getMaterialByName(name)
+            material = self.getMaterialByName(name)
         return material
 
     def materialExists(self, name):

@@ -20,6 +20,7 @@
                 1.0
             ],
             "name": "root",
+            "material": "__default1",
             "position": [
                 0.0,
                 0.0,
@@ -66,7 +67,7 @@
             "parentIndex": 2,
             "position": [
                 0.0,
-                0.74,
+                0.7400000095367432,
                 0.0
             ],
             "rotation": [
@@ -85,22 +86,22 @@
             ],
             "name": "light0",
             "light": {
+                "ambientColor": 8421504.0,
                 "style": 1,
                 "attenuation": [
                     0,
                     0,
                     0
                 ],
+                "spotCutoff": 90,
                 "specularColor": 16777215.0,
                 "diffuseColor": 16777215.0,
+                "spotExponent": 1,
                 "spotDirection": [
                     0,
                     0,
                     1
                 ],
-                "ambientColor": 8421504.0,
-                "spotCutoff": 90,
-                "spotExponent": 1,
                 "shining": 1
             },
             "parentIndex": 1,
@@ -146,22 +147,22 @@
             ],
             "name": "light1",
             "light": {
+                "ambientColor": 33023.0,
                 "style": 1,
                 "attenuation": [
                     0,
                     0,
                     0
                 ],
+                "spotCutoff": 90,
                 "specularColor": 33023.0,
                 "diffuseColor": 33023.0,
+                "spotExponent": 1,
                 "spotDirection": [
                     0,
                     0,
                     1
                 ],
-                "ambientColor": 33023.0,
-                "spotCutoff": 90,
-                "spotExponent": 1,
                 "shining": 1
             },
             "parentIndex": 1,
