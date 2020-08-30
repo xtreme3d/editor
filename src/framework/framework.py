@@ -4,7 +4,7 @@ import sdl2
 from keycodes import *
 
 def messageBox(title, text, style):
-    return ctypes.windll.user32.MessageBoxA(0, text, title, style)
+    return ctypes.windll.user32.MessageBoxW(0, unicode(text), unicode(title), style)
 
 def windowHandle(sdlwnd):    
     info = sdl2.SDL_SysWMinfo()

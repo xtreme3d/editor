@@ -104,7 +104,7 @@ class X3DClickArea:
         self.targetObject = obj
         MaterialLibraryActivate(app.internalMatlib)
         self.iconId = HUDSpriteCreate('icons', self.iconSize, self.iconSize, app.icons)
-        if self.targetObject.className == 'TGLDummycube':
+        if self.targetObject.className == 'TGLDummyCube':
             SpriteSetBounds(self.iconId, 0, 64, 64, 128)
         elif self.targetObject.className == 'TGLLightSource':
             SpriteSetBounds(self.iconId, 64, 0, 128, 64)
@@ -135,13 +135,14 @@ class X3DClickArea:
 
 class X3DObject:
     app = None
-    index = 0
     id = 0 #Xtreme3D id
-    name = ''
+    index = 0
+    parentIndex = 0
     className = ''
+    name = ''
     filename = ''
     material = None
-    parentIndex = 0
+    lightProperties = None
     clickArea = None
     properties = None
     
@@ -150,6 +151,17 @@ class X3DObject:
         self.id = id
         self.className = className
         self.index = uniqueIndex()
+        self.lightProperties = {
+            'style': lsOmni,
+            'ambientColor': c_black,
+            'diffuseColor': c_white,
+            'specularColor': c_white,
+            'attenuation': [0, 0, 0],
+            'shining': 1,
+            'spotCutoff': 90,
+            'spotExponent': 1,
+            'spotDirection': [0, 0, 1]
+        }
         self.clickArea = X3DClickArea(app, self)
         self.properties = {}
     
@@ -426,7 +438,7 @@ class EditorApplication(Framework):
         else:
             msg = 'Unsupported scene format: ' + ext
             self.logWarning(msg)
-            self.showMessage('Warning', 'Unsupported scene format')
+            self.showMessage('Warning', msg)
     
     def importMap(self, filename):
         name, ext = os.path.splitext(filename)
@@ -447,9 +459,9 @@ class EditorApplication(Framework):
             lastIndex = len(self.objects)
             self.lastMaterialIndex = len(self.materials)
         else:
-            msg = 'Unsupported file format: ' + ext
+            msg = 'Unsupported scene format: ' + ext
             self.logWarning(msg)
-            self.showMessage('Warning', 'Unsupported scene format')
+            self.showMessage('Warning', msg)
     
     def importModel(self, filename):
         name, ext = os.path.splitext(filename)
@@ -462,7 +474,7 @@ class EditorApplication(Framework):
         else:
             msg = 'Unsupported mesh format: ' + ext
             self.logWarning(msg)
-            self.showMessage('Warning', 'Unsupported mesh format')
+            self.showMessage('Warning', msg)
     
     def importTexture(self, filename):
         name, ext = os.path.splitext(filename)
@@ -479,8 +491,24 @@ class EditorApplication(Framework):
         else:
             msg = 'Unsupported texture format: ' + ext
             self.logWarning(msg)
-            self.showMessage('Warning', 'Unsupported texture format')
+            self.showMessage('Warning', msg)
     
+    def importFile(self, filename):
+        name, ext = os.path.splitext(filename)
+        if ext in self.importers:
+            self.importMap(filename)
+        elif ext in supportedMeshExtensions:
+            self.importModel(filename)
+        elif ext in supportedImageExtensions:
+            self.importTexture(filename)
+        else:
+            msg = 'Unsupported file format: ' + ext
+            self.logWarning(msg)
+            self.showMessage('Warning', msg)
+    
+    def onDropFile(self, filename):
+        self.importFile(filename)
+
     def pickObject(self):
         for obj in self.objects:
             clickArea = obj.clickArea
@@ -495,19 +523,7 @@ class EditorApplication(Framework):
             return self.getObjectById(pickedObjId)
         else:
             return None
-    
-    def importFile(self, filename):
-        name, ext = os.path.splitext(filename)
-        if ext in self.importers:
-            self.importMap(filename)
-        elif ext in supportedMeshExtensions:
-            self.importModel(filename)
-        elif ext in supportedImageExtensions:
-            self.importTexture(filename)
-    
-    def onDropFile(self, filename):
-        self.importFile(filename)
-    
+
     def onKeyDown(self, key):
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshFormats)
@@ -666,7 +682,7 @@ class EditorApplication(Framework):
             parentId = self.map
         className = unicode(className)
         creators = {
-            'TGLDummycube': lambda: DummycubeCreate(parentId),
+            'TGLDummyCube': lambda: DummycubeCreate(parentId),
             'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parentId),
             'TGLCube': lambda: CubeCreate(1, 1, 1, parentId),
             'TGLSphere': lambda: SphereCreate(1, 16, 8, parentId),
@@ -695,7 +711,7 @@ class EditorApplication(Framework):
             return obj
         else:
             self.logError('Unsupported object class: %s' % className)
-            return 0
+            return None
 
     def getObjectByIndex(self, index):
         for obj in self.objects:
@@ -755,6 +771,9 @@ class EditorApplication(Framework):
         data = json.loads(f.read())
         f.close()
         return data
+
+    def fileExists(self, path):
+        return os.path.isfile(path)
 
     def dirName(self, path):
         return os.path.dirname(path)

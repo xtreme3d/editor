@@ -17,14 +17,22 @@ def exportX3D(app, filename):
         if len(mat.name) == 0:
             self.logError('Invalid material')
         if not mat.name in data['materials']:
-            materialData = {
-                'textures': [''] * 16
-            }
+            materialData = {}
+            textures = []
             for i in range(len(mat.textures)):
                 tex = mat.textures[i]
                 if len(tex) > 0:
-                    app.copyFile(tex, texturesDir)
-                    materialData['textures'][i] = 'textures/' + app.baseName(tex)
+                    if app.fileExists(tex):
+                        app.copyFile(tex, texturesDir)
+                        newTextureFilename = 'textures/' + app.baseName(tex)
+                        textures.append(newTextureFilename)
+                    else:
+                        msg = 'Cannot find texture file: %s' % tex
+                        self.showMessage('Warning', msg)
+                        self.logWarning(msg)
+                        textures.append('')
+            if len(textures) > 0:
+                materialData['textures'] = textures
             data['materials'][mat.name] = materialData
     
     for obj in app.objects:
@@ -32,31 +40,42 @@ def exportX3D(app, filename):
         if id == 0:
             self.logError('Invalid object: null id')
         
-        parentObj = obj.getParent()
-        parentIndex = 0
-        if not parentObj is None:
-            parentIndex = parentObj.index
-        
-        materialName = ''
-        if not obj.material == None:
-            materialName = obj.material.name
-        
         objData = {
-            'name': obj.name,
             'index': obj.index,
-            'class': obj.className,
-            'parentIndex': parentIndex,
             'position': obj.getPosition(),
             'rotation': obj.getRotation(),
-            'scale': obj.getScale(),
-            'material': materialName,
-            'filename': obj.filename,
-            'properties': obj.properties
+            'scale': obj.getScale()
         }
         
+        if len(obj.name) > 0:
+            objData['name'] = obj.name
+        
+        className = obj.className
+        if len(obj.className) == 0:
+            className = 'TGLDummyCube'
+        objData['class'] = className
+        
+        parentObj = obj.getParent()
+        if not parentObj is None:
+            objData['parentIndex'] = parentObj.index
+        
+        if not obj.material == None:
+            objData['material'] = obj.material.name
+        
+        if obj.className == 'TGLLightSource':
+            objData['light'] = obj.lightProperties
+        
         if len(obj.filename) > 0:
-            app.copyFile(obj.filename, modelsDir)
-            objData['filename'] = 'models/' + app.baseName(obj.filename)
+            if app.fileExists(obj.filename):
+                app.copyFile(obj.filename, modelsDir)
+                objData['filename'] = 'models/' + app.baseName(obj.filename)
+            else:
+                msg = 'Cannot find model file: %s' % obj.filename
+                self.showMessage('Warning', msg)
+                self.logWarning(msg)
+        
+        if obj.properties:
+            objData['properties'] = obj.properties
         
         data['objects'].append(objData)
     
@@ -78,6 +97,9 @@ def importX3D(app, filename):
             textures = matData['textures']
             if len(textures) > 0:
                 texture0 = dir + '/' + matData['textures'][0]
+                if not app.fileExists(texture0):
+                    texture0 = ''
+                    #TODO: warning
         material = app.addMaterialOfName(matName, texture0)
         #TODO: load other textures
     
@@ -86,7 +108,7 @@ def importX3D(app, filename):
         if not 'index' in objData:
             self.logError('Invalid object: no index')
         index = objData['index']
-        className = objData.get('class', 'TGLDummycube')
+        className = objData.get('class', 'TGLDummyCube')
         name = objData.get('name', '')
         parentIndex = objData.get('parentIndex', 0)
         objFilename = ''
@@ -109,6 +131,8 @@ def importX3D(app, filename):
             mat = app.getMaterialByName(matName)
             if mat != None:
                 obj.setMaterial(mat)
+        if 'light' in objData:
+            obj.lightProperties = objData['light']
         obj.properties = objData.get('properties', {})
     
     # Assign parents to created objects
