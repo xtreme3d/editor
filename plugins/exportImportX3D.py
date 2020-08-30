@@ -30,7 +30,7 @@ def exportX3D(app, filename):
     for obj in app.objects:
         id = obj.id
         if id == 0:
-            self.logError('Invalid object')
+            self.logError('Invalid object: null id')
         
         parentObj = obj.getParent()
         parentIndex = 0
@@ -66,9 +66,9 @@ def importX3D(app, filename):
     app.logMessage('Import %s...' % filename)
     dir = app.dirName(filename)
     data = app.loadJSON(filename)
-    app.mapName = data['name']
-    app.mapAuthor = data['author']
-    app.mapCopyright = data['copyright']
+    app.mapName = data.get('name', '')
+    app.mapAuthor = data.get('author', '')
+    app.mapCopyright = data.get('copyright', '')
     
     # Create materials
     for matName, matData in data['materials'].iteritems():
@@ -83,6 +83,8 @@ def importX3D(app, filename):
     
     # Create objects
     for objData in data['objects']:
+        if not 'index' in objData:
+            self.logError('Invalid object: no index')
         index = objData['index']
         className = objData.get('class', 'TGLDummycube')
         name = objData.get('name', '')
@@ -113,7 +115,7 @@ def importX3D(app, filename):
     for obj in app.objects:
         id = obj.id
         if id == 0:
-            self.logError('Invalid object')
+            self.logError('Invalid object: null id')
         obj.setParentByIndex(obj.parentIndex)
 
 def setup(app):
