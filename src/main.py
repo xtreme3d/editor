@@ -185,6 +185,8 @@ class EditorApplication(Framework):
     previousMouseY = 0
     dragAxis = -1
     
+    increment = 1
+    
     lastMaterialIndex = 0
     
     actions = {
@@ -457,8 +459,9 @@ class EditorApplication(Framework):
             filePath = tkFileDialog.askopenfilename(filetypes = self.supportedImportFormats)
             if len(filePath) > 0:
                 self.importMap(filePath)
+        
         self.callActions('keyDown', Event(key = key))
-            
+    
     def onKeyUp(self, key):
         self.callActions('keyUp', Event(key = key))
             
@@ -572,24 +575,11 @@ class EditorApplication(Framework):
             self.controlNavigator(dt)
         
         if self.selectedObject != None:
-            obj = self.selectedObject.id
-            if not (self.keyPressed(KEY_LCTRL) or self.keyPressed(KEY_RCTRL)):
-                if self.keyPressed(KEY_LEFT): 
-                    ObjectTranslate(obj, 0.1, 0, 0)
-                    self.updateBoundingBox(self.selectedObject)
-                if self.keyPressed(KEY_RIGHT):
-                    ObjectTranslate(obj, -0.1, 0, 0)
-                    self.updateBoundingBox(self.selectedObject)
-                if self.keyPressed(KEY_UP):
-                    ObjectTranslate(obj, 0, 0, 0.1)
-                    self.updateBoundingBox(self.selectedObject)
-                if self.keyPressed(KEY_DOWN):
-                    ObjectTranslate(obj, 0, 0, -0.1)
-                    self.updateBoundingBox(self.selectedObject)
-            x = ObjectGetPosition(obj, 0)
-            y = ObjectGetPosition(obj, 1)
-            z = ObjectGetPosition(obj, 2)
-            HUDTextSetText(self.text, 'Name: %s\rX: %.2f\rY: %.2f\rZ: %.2f' % (ObjectGetName(obj), x, y, z));
+            obj = self.selectedObject
+            x = ObjectGetPosition(obj.id, 0)
+            y = ObjectGetPosition(obj.id, 1)
+            z = ObjectGetPosition(obj.id, 2)
+            HUDTextSetText(self.text, 'Name: %s\rX: %.2f\rY: %.2f\rZ: %.2f' % (obj.name, x, y, z));
         
         Update(dt)
     
