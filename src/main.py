@@ -93,6 +93,35 @@ def uniqueIndex():
     lastIndex += 1
     return lastIndex
 
+class X3DClickArea:
+    app = None
+    targetObject = None
+    iconId = 0
+    iconSize = 32
+    
+    def __init__(self, app, obj):
+        self.app = app
+        self.targetObject = obj
+        MaterialLibraryActivate(app.internalMatlib)
+        self.iconId = HUDSpriteCreate('icons', self.iconSize, self.iconSize, app.icons)
+        if self.targetObject.className == 'TGLLightSource':
+            SpriteSetBounds(self.iconId, 64, 0, 128, 64)
+        else:
+            SpriteSetBounds(self.iconId, 0, 0, 64, 64)
+        MaterialLibraryActivate(app.matlib)
+    
+    def cleanup(self):
+        ObjectDestroy(self.iconId)
+    
+    def update(self, dt):
+        x = ObjectGetAbsolutePosition(self.targetObject.id, 0)
+        y = ObjectGetAbsolutePosition(self.targetObject.id, 1)
+        z = ObjectGetAbsolutePosition(self.targetObject.id, 2)
+        sx = ViewerWorldToScreen(self.app.viewer, x, y, z, 0)
+        sy = ViewerWorldToScreen(self.app.viewer, x, y, z, 1)
+        sz = ViewerWorldToScreen(self.app.viewer, x, y, z, 2)
+        ObjectSetPosition(self.iconId, sx, app.windowHeight - sy, sz)
+
 class X3DObject:
     app = None
     index = 0
@@ -102,12 +131,20 @@ class X3DObject:
     filename = ''
     material = None
     parentIndex = 0
+    clickArea = None
     
     def __init__(self, app, id, className):
         self.app = app
         self.id = id
         self.className = className
         self.index = uniqueIndex()
+        self.clickArea = X3DClickArea(app, self)
+    
+    def cleanup(self):
+        self.clickArea.cleanup()
+    
+    def update(self, dt):
+        self.clickArea.update(dt)
     
     def setName(self, name):
         self.name = name
@@ -251,12 +288,6 @@ class EditorApplication(Framework):
         # Internal objects
         MaterialLibraryActivate(self.internalMatlib)
         
-        self.light = LightCreate(lsOmni, self.scene)
-        LightSetAmbientColor(self.light, c_gray);
-        LightSetDiffuseColor(self.light, c_white);
-        LightSetSpecularColor(self.light, c_white);
-        ObjectSetPosition(self.light, 2, 4, 2)
-
         self.camera = CameraCreate(self.scene)
         ObjectSetPosition(self.camera, 0, 1, -5)
         ObjectTurn(self.camera, 180)
@@ -319,13 +350,19 @@ class EditorApplication(Framework):
         ObjectSetMaterial(self.gizmoZ, 'gizmoBlue')
         ObjectSetMaterial(self.gizmoArrowZ, 'gizmoBlue')
         
-        MaterialLibraryActivate(self.matlib)
+        self.icons = DummycubeCreate(self.front)
+        MaterialCreate('icons', 'data/icons.png')
+        MaterialSetDiffuseColor('icons', c_white, 1.0)
+        MaterialSetBlendingMode('icons', bmTransparency)
+        MaterialSetOptions('icons', 1, 1)
         
         self.font = TTFontCreate('data/fonts/NotoSans-Regular.ttf', 14)
         
         self.text = HUDTextCreate(self.font, '', self.front)
         HUDTextSetColor(self.text, c_white, 1.0)
         ObjectSetPosition(self.text, 20, 20, 0)
+        
+        MaterialLibraryActivate(self.matlib)
         
         self.pluginSource = pluginBase.make_plugin_source(
             searchpath = ['./plugins'],
@@ -382,10 +419,14 @@ class EditorApplication(Framework):
         name, ext = os.path.splitext(filename)
         if ext in self.importers:
             self.unselectObjects()
+            for obj in self.objects:
+                obj.cleanup()
             ObjectDestroyChildren(self.map)
+            ObjectDestroyChildren(self.icons)
             MaterialLibraryClear(self.matlib)
             self.objects = []
             self.materials = []
+            self.clickAreas = []
             lastIndex = 0
             self.lastTag = 0
             self.lastMaterialIndex = 0
@@ -593,6 +634,9 @@ class EditorApplication(Framework):
             z = ObjectGetPosition(obj.id, 2)
             HUDTextSetText(self.text, 'Name: %s\rX: %.2f\rY: %.2f\rZ: %.2f' % (obj.name, x, y, z));
         
+        for obj in self.objects:
+            obj.update(dt)
+        
         Update(dt)
     
     def render(self):
@@ -618,7 +662,8 @@ class EditorApplication(Framework):
             'TGLIcosahedron': lambda: IcosahedronCreate(parentId),
             'TGLTeapot': lambda: TeapotCreate(parentId),
             'TGLFreeform': lambda: FreeformCreate(filename, self.matlib, self.matlib, parentId),
-            'TGLActor': lambda: ActorCreate(filename, self.matlib, parentId)
+            'TGLActor': lambda: ActorCreate(filename, self.matlib, parentId),
+            'TGLLightSource': lambda: LightCreate(lsOmni, parentId)
         }
         if className in creators:
             id = creators[className]()

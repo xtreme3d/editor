@@ -87,6 +87,29 @@
             "material": "material1",
             "class": "TGLTeapot",
             "parentIndex": 1
+        },
+        {
+            "index": 3,
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "name": "",
+            "filename": "",
+            "position": [
+                2.0,
+                3.0,
+                2.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "material": "",
+            "class": "TGLLightSource",
+            "parentIndex": 0
         }
     ],
     "name": "My Map",
