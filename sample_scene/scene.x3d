@@ -14,14 +14,12 @@
     "objects": [
         {
             "index": 1,
-            "properties": {},
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
             "name": "root",
-            "filename": "",
             "position": [
                 0.0,
                 0.0,
@@ -32,20 +30,18 @@
                 0.0,
                 0.0
             ],
-            "material": "",
-            "class": "TGLDummyCube",
-            "parentIndex": 0
+            "class": "TGLDummyCube"
         },
         {
             "index": 2,
-            "properties": {},
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
             "name": "cube0",
-            "filename": "",
+            "material": "material0",
+            "parentIndex": 1,
             "position": [
                 0.0,
                 0.5,
@@ -56,20 +52,18 @@
                 0.0,
                 0.0
             ],
-            "material": "material0",
-            "class": "TGLCube",
-            "parentIndex": 1
+            "class": "TGLCube"
         },
         {
             "index": 3,
-            "properties": {},
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
             "name": "teapot0",
-            "filename": "",
+            "material": "material1",
+            "parentIndex": 2,
             "position": [
                 0.0,
                 0.7399998307228088,
@@ -80,20 +74,9 @@
                 0.0,
                 0.0
             ],
-            "material": "material1",
-            "class": "TGLTeapot",
-            "parentIndex": 2
+            "class": "TGLTeapot"
         },
         {
-            "class": "TGLLightSource",
-            "material": "",
-            "parentIndex": 1,
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "properties": {},
             "index": 4,
             "scale": [
                 1.0,
@@ -102,30 +85,56 @@
             ],
             "name": "light0",
             "light": {
-                "ambientColor": 0.0,
                 "style": 1,
                 "attenuation": [
                     0,
                     0,
                     0
                 ],
-                "spotCutoff": 90,
                 "specularColor": 16777215.0,
                 "diffuseColor": 16777215.0,
-                "spotExponent": 1,
                 "spotDirection": [
                     0,
                     0,
                     1
                 ],
+                "ambientColor": 0.0,
+                "spotCutoff": 90,
+                "spotExponent": 1,
                 "shining": 1
             },
-            "filename": "",
+            "parentIndex": 1,
             "position": [
                 2.0,
                 3.0,
                 2.0
-            ]
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "class": "TGLLightSource"
+        },
+        {
+            "index": 5,
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "filename": "models/suzanne.obj",
+            "position": [
+                2.0199999809265137,
+                0.9199995994567871,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "class": "TGLFreeform"
         }
     ],
     "name": "My Map",
