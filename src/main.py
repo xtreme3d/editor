@@ -185,9 +185,6 @@ class EditorApplication(Framework):
     previousMouseY = 0
     dragAxis = -1
     
-    lastIndexForClass = {}
-    lastTag = 0
-    
     lastMaterialIndex = 0
     
     actions = {
@@ -382,9 +379,13 @@ class EditorApplication(Framework):
             ObjectDestroyChildren(self.map)
             MaterialLibraryClear(self.matlib)
             self.objects = []
-            self.lastIndexForClass = {}
+            self.materials = []
+            lastIndex = 0
             self.lastTag = 0
+            self.lastMaterialIndex = 0
             self.importers[ext](self, filename)
+            lastIndex = len(self.objects)
+            self.lastMaterialIndex = len(self.materials)
         else:
             msg = 'Unsupported file format: ' + ext
             self.logWarning(msg)
@@ -411,7 +412,10 @@ class EditorApplication(Framework):
             if not material == None:
                 pickedObj = self.pickObject()
                 if pickedObj != None:
+                    print(material.name)
                     pickedObj.setMaterial(material)
+            else:
+                logError('Failed to create material %s' % material.name)
         else:
             msg = 'Unsupported texture format: ' + ext
             self.logWarning(msg)
