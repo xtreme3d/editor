@@ -1,5 +1,46 @@
 {
-    "materials": {},
+    "materials": {
+        "material0": {
+            "textures": [
+                "textures/stone.jpg",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+            ]
+        },
+        "material1": {
+            "textures": [
+                "textures/grass.jpg",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+            ]
+        }
+    },
     "objects": [
         {
             "index": 1,
@@ -11,16 +52,16 @@
             "name": "",
             "filename": "",
             "position": [
-                0,
-                0,
-                2
+                0.0,
+                0.5,
+                0.0
             ],
             "rotation": [
                 0.0,
                 0.0,
                 0.0
             ],
-            "material": "",
+            "material": "material0",
             "class": "TGLCube",
             "parentIndex": 0
         },
@@ -34,16 +75,16 @@
             "name": "",
             "filename": "",
             "position": [
-                0.6,
-                1,
-                0
+                0.0,
+                0.7399998307228088,
+                0.0
             ],
             "rotation": [
                 0.0,
                 0.0,
                 0.0
             ],
-            "material": "",
+            "material": "material1",
             "class": "TGLTeapot",
             "parentIndex": 1
         }

@@ -16,8 +16,6 @@ def exportX3D(app, filename):
     for mat in app.materials:
         if len(mat.name) == 0:
             self.logError('Invalid material')
-        print(mat.name)
-        print(mat.textures)
         if not mat.name in data['materials']:
             materialData = {
                 'textures': [''] * 16
@@ -25,7 +23,7 @@ def exportX3D(app, filename):
             for i in range(len(mat.textures)):
                 tex = mat.textures[i]
                 if len(tex) > 0:
-                    app.copyFile(tex, modelsDir)
+                    app.copyFile(tex, texturesDir)
                     materialData['textures'][i] = 'textures/' + app.baseName(tex)
             data['materials'][mat.name] = materialData
     
@@ -71,7 +69,11 @@ def importX3D(app, filename):
     app.mapAuthor = data['author']
     app.mapCopyright = data['copyright']
     
-    #TODO: load materials
+    # Create materials
+    for matName, matData in data['materials'].iteritems():
+        texture0 = dir + '/' + matData['textures'][0]
+        material = app.addMaterialOfName(matName, texture0)
+        #TODO: load other textures
     
     # Create objects
     for objData in data['objects']:
@@ -85,6 +87,7 @@ def importX3D(app, filename):
         position = objData['position']
         rotation = objData['rotation']
         scale = objData['scale']
+        matName = objData['material']
         obj = app.addObject(className, objFilename)
         obj.index = index
         obj.parentIndex = parentIndex
@@ -92,6 +95,10 @@ def importX3D(app, filename):
         obj.setPosition(position[0], position[1], position[2])
         obj.setRotation(rotation[0], rotation[1], rotation[2])
         obj.setScale(scale[0], scale[1], scale[2])
+        if len(matName) > 0:
+            mat = app.getMaterialByName(matName)
+            if mat != None:
+                obj.setMaterial(mat)
     
     # Assign parents to created objects
     for obj in app.objects:

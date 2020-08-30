@@ -169,7 +169,6 @@ class X3DMaterial:
         self.textures = [''] * 16
         if filename != '':
             self.textures[0] = filename
-        print(self.textures)
     
     def setTexture(self, layer, filename):
         self.textures[layer] = filename
@@ -180,7 +179,7 @@ class EditorApplication(Framework):
     mapAuthor = userName
     mapCopyright = 'Copyright (C) %s %s' % (now.year, userName)
 
-    selectedObject = 0
+    selectedObject = None
     mouseSensibility = 0.3
     previousMouseX = 0
     previousMouseY = 0
@@ -217,7 +216,6 @@ class EditorApplication(Framework):
     
     objects = []
     materials = []
-    materialsByTexture = {}
 
     def start(self):
         self.keycodes = keycodes
@@ -414,7 +412,6 @@ class EditorApplication(Framework):
                 pickedObj = self.pickObject()
                 if pickedObj != None:
                     pickedObj.setMaterial(material)
-                    #ObjectSetMaterial(pickedObj, material.name)
         else:
             msg = 'Unsupported texture format: ' + ext
             self.logWarning(msg)
@@ -485,32 +482,32 @@ class EditorApplication(Framework):
             self.unselectObjects()
             pickedObj = self.pickObject()
             if pickedObj != None:
-                self.selectObject(pickedObj.id)
+                self.selectObject(pickedObj)
         self.callActions('mouseClick', Event(button = button))
     
-    def selectObject(self, id):
-        self.selectedObject = id
-        self.updateBoundingBox(id)
+    def selectObject(self, obj):
+        self.selectedObject = obj
+        self.updateBoundingBox(self.selectedObject)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
-        self.callActions('selectObject', Event(object = id))
+        self.callActions('selectObject', Event(object = obj.id))
     
     def unselectObjects(self):
-        if self.selectedObject != 0:
-            id = self.selectedObject
+        if self.selectedObject != None:
+            obj = self.selectedObject
             ObjectHide(self.boundingBox)
             ObjectHide(self.gizmo)
-            self.callActions('unselectObject', Event(object = id))
-            self.selectedObject = 0
+            self.callActions('unselectObject', Event(object = obj.id))
+            self.selectedObject = None
     
-    def updateBoundingBox(self, id):
-        ObjectSetPositionOfObject(self.gizmo, id)
-        ObjectSetPositionOfObject(self.boundingBox, id)
-        ObjectAlignWithObject(self.boundingBox, id)
-        sx = ObjectGetScale(id, 0)
-        sy = ObjectGetScale(id, 1)
-        sz = ObjectGetScale(id, 2)
-        bsr = ObjectGetBoundingSphereRadius(id)
+    def updateBoundingBox(self, obj):
+        ObjectSetPositionOfObject(self.gizmo, obj.id)
+        ObjectSetPositionOfObject(self.boundingBox, obj.id)
+        ObjectAlignWithObject(self.boundingBox, obj.id)
+        sx = ObjectGetScale(obj.id, 0)
+        sy = ObjectGetScale(obj.id, 1)
+        sz = ObjectGetScale(obj.id, 2)
+        bsr = ObjectGetBoundingSphereRadius(obj.id)
         ObjectSetScale(self.boundingBox, max(bsr, sx * 0.5), max(bsr, sy * 0.5), max(bsr, sz * 0.5))
     
     def onWindowResize(self, width, height):
@@ -521,8 +518,8 @@ class EditorApplication(Framework):
         dy = (self.mouseY - self.previousMouseY);
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
-        if self.selectedObject != 0:
-            id = self.selectedObject
+        if self.selectedObject != None:
+            id = self.selectedObject.id
             dirx = ObjectGetAbsoluteDirection(id, 0)
             diry = ObjectGetAbsoluteDirection(id, 1)
             dirz = ObjectGetAbsoluteDirection(id, 2)
@@ -546,7 +543,7 @@ class EditorApplication(Framework):
                 vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
                 move = dirx * vx + dirz * vz
                 ObjectTranslate(id, 0, 0, move)
-            self.updateBoundingBox(id)
+            self.updateBoundingBox(self.selectedObject)
     
     def controlNavigator(self, dt):
         dx = (self.mouseX - self.dragOriginX) * self.mouseSensibility;
@@ -570,21 +567,21 @@ class EditorApplication(Framework):
         if self.mouseButtonPressed(MB_RIGHT):
             self.controlNavigator(dt)
         
-        if self.selectedObject != 0:
-            obj = self.selectedObject
+        if self.selectedObject != None:
+            obj = self.selectedObject.id
             if not (self.keyPressed(KEY_LCTRL) or self.keyPressed(KEY_RCTRL)):
                 if self.keyPressed(KEY_LEFT): 
                     ObjectTranslate(obj, 0.1, 0, 0)
-                    self.updateBoundingBox(obj)
+                    self.updateBoundingBox(self.selectedObject)
                 if self.keyPressed(KEY_RIGHT):
                     ObjectTranslate(obj, -0.1, 0, 0)
-                    self.updateBoundingBox(obj)
+                    self.updateBoundingBox(self.selectedObject)
                 if self.keyPressed(KEY_UP):
                     ObjectTranslate(obj, 0, 0, 0.1)
-                    self.updateBoundingBox(obj)
+                    self.updateBoundingBox(self.selectedObject)
                 if self.keyPressed(KEY_DOWN):
                     ObjectTranslate(obj, 0, 0, -0.1)
-                    self.updateBoundingBox(obj)
+                    self.updateBoundingBox(self.selectedObject)
             x = ObjectGetPosition(obj, 0)
             y = ObjectGetPosition(obj, 1)
             z = ObjectGetPosition(obj, 2)
@@ -644,24 +641,33 @@ class EditorApplication(Framework):
         return None
 
     def addMaterial(self, filename):
+        materialName = self.uniqueMaterialName()
+        return self.addMaterialOfName(materialName, filename)
+
+    def addMaterialOfName(self, name, filename):
         material = None
-        if filename != '':
-            print(self.materialsByTexture)
-            if not filename in self.materialsByTexture:
-                materialName = self.uniqueMaterialName()
-                self.logMessage('Creating material %s...' % materialName)
-                material = X3DMaterial(materialName, filename)
-                self.materialsByTexture[filename] = material
-                self.materials.append(material)
+        #TODO: check if name already exists
+        if not self.materialExists(name):
+            if filename != '':
+                material = X3DMaterial(name, filename)
             else:
-                material = self.materialsByTexture[filename]
-                self.logMessage('Texture %s already exists, using material %s' % (filename, material.name))
-        else:
-            materialName = self.uniqueMaterialName()
-            self.logMessage('Creating material %s...' % materialName)
-            material = X3DMaterial(materialName, '')
+                material = X3DMaterial(name, '')
             self.materials.append(material)
+        else:
+            return self.getMaterialByName(name)
         return material
+
+    def materialExists(self, name):
+        for mat in self.materials:
+            if mat.name == name:
+                return True
+        return False
+
+    def getMaterialByName(self, name):
+        for mat in self.materials:
+            if mat.name == name:
+                return mat
+        return None
 
     def uniqueMaterialName(self):
         name = 'material' + str(self.lastMaterialIndex)
