@@ -104,7 +104,9 @@ class X3DClickArea:
         self.targetObject = obj
         MaterialLibraryActivate(app.internalMatlib)
         self.iconId = HUDSpriteCreate('icons', self.iconSize, self.iconSize, app.icons)
-        if self.targetObject.className == 'TGLLightSource':
+        if self.targetObject.className == 'TGLDummycube':
+            SpriteSetBounds(self.iconId, 0, 64, 64, 128)
+        elif self.targetObject.className == 'TGLLightSource':
             SpriteSetBounds(self.iconId, 64, 0, 128, 64)
         else:
             SpriteSetBounds(self.iconId, 0, 0, 64, 64)
