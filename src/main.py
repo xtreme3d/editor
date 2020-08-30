@@ -331,10 +331,6 @@ class EditorApplication(Framework):
         ObjectSetName(self.map, 'map')
         
         # Internal objects
-        self.outlineShader = OutlineShaderCreate(0)
-        OutlineShaderSetLineColor(self.outlineShader, c_white)
-        OutlineShaderSetLineWidth(self.outlineShader, 4)
-        
         MaterialLibraryActivate(self.internalMatlib)
         
         self.camera = CameraCreate(self.scene)
