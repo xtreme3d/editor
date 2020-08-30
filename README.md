@@ -18,11 +18,12 @@ python setup.py build
 ## Controls
 - Right mouse button + WASD - navigate through the scene
 - Left mouse button - select object
-- Arrow keys - move selected object
+- Arrow keys, PgUp, PgDn - move selected object by a small increment
 - Ctrl+O - open scene (WIP)
 - Ctrl+S - save scene (WIP)
 - Ctrl+I - import model
 - Ctrl+Down - put selected object on ground
+- Ctrl+G - align selected object to grid
 
 ## License
 Copyright (c) 2020 Timur Gafarov. Distributed under the Boost Software License, Version 1.0.

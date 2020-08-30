@@ -174,6 +174,9 @@ class X3DMaterial:
         self.textures[layer] = filename
         MaterialLoadTextureEx(self.name, filename, layer)
 
+def roundTo(a, step):
+    return round(float(a) / step) * step
+
 class EditorApplication(Framework):
     mapName = 'My Map'
     mapAuthor = userName
@@ -185,7 +188,7 @@ class EditorApplication(Framework):
     previousMouseY = 0
     dragAxis = -1
     
-    increment = 1
+    increment = 0.1
     
     lastMaterialIndex = 0
     
@@ -459,6 +462,14 @@ class EditorApplication(Framework):
             filePath = tkFileDialog.askopenfilename(filetypes = self.supportedImportFormats)
             if len(filePath) > 0:
                 self.importMap(filePath)
+        if self.keyComboPressed(KEY_G, KEY_LCTRL) or self.keyComboPressed(KEY_G, KEY_RCTRL):
+            obj = self.selectedObject
+            if obj != None:
+                x = roundTo(ObjectGetAbsolutePosition(obj.id, 0), 1)
+                y = ObjectGetAbsolutePosition(obj.id, 1)
+                z = roundTo(ObjectGetAbsolutePosition(obj.id, 2), 2)
+                ObjectSetAbsolutePosition(obj.id, x, y, z)
+                self.updateBoundingBox(obj)
         
         self.callActions('keyDown', Event(key = key))
     
