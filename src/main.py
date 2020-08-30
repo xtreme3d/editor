@@ -694,14 +694,18 @@ class EditorApplication(Framework):
         return os.path.basename(path)
 
     def makeDir(self, dir):
-        if os.path.exists(dir):
-            shutil.rmtree(dir)
-        os.makedirs(dir)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+    def sameFile(self, file1, file2):
+        p1 = os.path.normcase(os.path.abspath(os.path.normpath(file1)))
+        p2 = os.path.normcase(os.path.abspath(os.path.normpath(file2)))
+        return p1 == p2
 
     def copyFile(self, filename, dir):
         name = os.path.basename(filename)
         newFilename = dir + '/' + name
-        if filename != newFilename:
+        if not self.sameFile(filename, newFilename):
             shutil.copy(filename, dir + '/')
 
 app = EditorApplication(1280, 720, 'Xtreme3D Editor')
