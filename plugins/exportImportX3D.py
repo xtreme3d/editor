@@ -50,7 +50,8 @@ def exportX3D(app, filename):
             'rotation': obj.getRotation(),
             'scale': obj.getScale(),
             'material': materialName,
-            'filename': obj.filename
+            'filename': obj.filename,
+            'properties': obj.properties
         }
         
         if len(obj.filename) > 0:
@@ -71,23 +72,30 @@ def importX3D(app, filename):
     
     # Create materials
     for matName, matData in data['materials'].iteritems():
-        texture0 = dir + '/' + matData['textures'][0]
+        textures = [''] * 16
+        texture0 = ''
+        if 'textures' in matData:
+            textures = matData['textures']
+            if len(textures) > 0:
+                texture0 = dir + '/' + matData['textures'][0]
         material = app.addMaterialOfName(matName, texture0)
         #TODO: load other textures
     
     # Create objects
     for objData in data['objects']:
         index = objData['index']
-        name = objData['name']
-        className = objData['class']
-        parentIndex = objData['parentIndex']
+        className = objData.get('class', 'TGLDummycube')
+        name = objData.get('name', '')
+        parentIndex = objData.get('parentIndex', 0)
         objFilename = ''
-        if len(objData['filename']) > 0:
-            objFilename = dir + '/' + objData['filename']
-        position = objData['position']
-        rotation = objData['rotation']
-        scale = objData['scale']
-        matName = objData['material']
+        if 'filename' in objData:
+            filename = objData['filename']
+            if len(filename) > 0:
+                objFilename = dir + '/' + filename
+        position = objData.get('position', [0, 0, 0])
+        rotation = objData.get('rotation', [0, 0, 0])
+        scale = objData.get('scale', [0, 0, 0])
+        matName = objData.get('material', '')
         obj = app.addObject(className, objFilename)
         obj.index = index
         obj.parentIndex = parentIndex
@@ -99,6 +107,7 @@ def importX3D(app, filename):
             mat = app.getMaterialByName(matName)
             if mat != None:
                 obj.setMaterial(mat)
+        obj.properties = objData.get('properties', {})
     
     # Assign parents to created objects
     for obj in app.objects:

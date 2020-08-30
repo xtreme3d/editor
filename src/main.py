@@ -143,6 +143,7 @@ class X3DObject:
     material = None
     parentIndex = 0
     clickArea = None
+    properties = None
     
     def __init__(self, app, id, className):
         self.app = app
@@ -150,6 +151,7 @@ class X3DObject:
         self.className = className
         self.index = uniqueIndex()
         self.clickArea = X3DClickArea(app, self)
+        self.properties = {}
     
     def cleanup(self):
         self.clickArea.cleanup()
