@@ -258,7 +258,8 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.light, 2, 4, 2)
 
         self.camera = CameraCreate(self.scene)
-        ObjectSetPosition(self.camera, 0, 1, 5)
+        ObjectSetPosition(self.camera, 0, 1, -5)
+        ObjectTurn(self.camera, 180)
         CameraSetViewDepth(self.camera, 500)
         CameraSetFocal(self.camera, 120)
         CameraSetNearPlaneBias(self.camera, 0.1)
