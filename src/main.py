@@ -14,6 +14,7 @@ import sdl2
 import json
 from framework import *
 from framework import keycodes
+from xtreme3d import x3dconstants as constants
 from pluginbase import PluginBase
 
 now = datetime.datetime.now()
@@ -220,6 +221,23 @@ class X3DObject:
             ObjectGetScale(self.id, 1),
             ObjectGetScale(self.id, 2)
         ]
+        
+    def setLightDiffuseColor(self, color):
+        self.lightProperties['diffuseColor'] = color
+        if self.className == 'TGLLightSource':
+            LightSetDiffuseColor(self.id, color)
+    
+    def setLightSpecularColor(self, color):
+        self.lightProperties['specularColor'] = color
+        if self.className == 'TGLLightSource':
+            LightSetSpecularColor(self.id, color)
+
+    def setLightAmbientColor(self, color):
+        self.lightProperties['ambientColor'] = color
+        if self.className == 'TGLLightSource':
+            LightSetAmbientColor(self.id, color)
+            
+    #TODO: other light functions
 
 class X3DMaterial:
     name = ''
@@ -284,6 +302,7 @@ class EditorApplication(Framework):
     def start(self):
         self.keycodes = keycodes
         self.x3d = x3d
+        self.constants = constants
     
         EngineCreate()
         self.viewer = ViewerCreate(0, 0, self.windowWidth, self.windowHeight, windowHandle(self.window))
@@ -701,6 +720,7 @@ class EditorApplication(Framework):
         }
         if className in creators:
             id = creators[className]()
+            LightFXCreate(id)
             obj = X3DObject(self, id, className)
             obj.filename = filename
             parentObj = obj.getParent()

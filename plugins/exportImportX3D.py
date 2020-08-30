@@ -98,8 +98,11 @@ def importX3D(app, filename):
             if len(textures) > 0:
                 texture0 = dir + '/' + matData['textures'][0]
                 if not app.fileExists(texture0):
+                    msg = 'Cannot find texture file: %s' % texture0
+                    self.showMessage('Warning', msg)
+                    self.logWarning(msg)
                     texture0 = ''
-                    #TODO: warning
+        
         material = app.addMaterialOfName(matName, texture0)
         #TODO: load other textures
     
@@ -116,6 +119,12 @@ def importX3D(app, filename):
             filename = objData['filename']
             if len(filename) > 0:
                 objFilename = dir + '/' + filename
+                if not app.fileExists(objFilename):
+                    msg = 'Cannot find model file: %s' % objFilename
+                    self.showMessage('Warning', msg)
+                    self.logWarning(msg)
+                    objFilename = ''
+        
         position = objData.get('position', [0, 0, 0])
         rotation = objData.get('rotation', [0, 0, 0])
         scale = objData.get('scale', [0, 0, 0])
@@ -132,7 +141,11 @@ def importX3D(app, filename):
             if mat != None:
                 obj.setMaterial(mat)
         if 'light' in objData:
-            obj.lightProperties = objData['light']
+            light = objData['light']
+            obj.setLightDiffuseColor(light.get('diffuseColor', app.constants.c_white))
+            obj.setLightSpecularColor(light.get('specularColor', app.constants.c_white))
+            obj.setLightAmbientColor(light.get('ambientColor', app.constants.c_black))
+            #TODO: other light props
         obj.properties = objData.get('properties', {})
     
     # Assign parents to created objects

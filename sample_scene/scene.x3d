@@ -98,7 +98,7 @@
                     0,
                     1
                 ],
-                "ambientColor": 0.0,
+                "ambientColor": 8421504.0,
                 "spotCutoff": 90,
                 "spotExponent": 1,
                 "shining": 1
@@ -135,6 +135,46 @@
                 0.0
             ],
             "class": "TGLFreeform"
+        },
+        {
+            "index": 6,
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "name": "light1",
+            "light": {
+                "style": 1,
+                "attenuation": [
+                    0,
+                    0,
+                    0
+                ],
+                "specularColor": 33023.0,
+                "diffuseColor": 33023.0,
+                "spotDirection": [
+                    0,
+                    0,
+                    1
+                ],
+                "ambientColor": 33023.0,
+                "spotCutoff": 90,
+                "spotExponent": 1,
+                "shining": 1
+            },
+            "parentIndex": 1,
+            "position": [
+                -2.0,
+                1.0,
+                -2.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "class": "TGLLightSource"
         }
     ],
     "name": "Sample map",
