@@ -144,7 +144,6 @@ class X3DObject:
     name = ''
     filename = ''
     material = None
-    defaultMaterial = ''
     lightProperties = None
     clickArea = None
     properties = None
@@ -154,11 +153,6 @@ class X3DObject:
         self.id = id
         self.className = className
         self.index = uniqueIndex()
-        if self.className != 'TGLLightSource':
-            self.defaultMaterial = app.addMaterialOfName('__default%s' % self.index, '')
-            self.defaultMaterial.export = False
-            MaterialSetDiffuseColor(self.defaultMaterial.name, c_ltgray, 1.0)
-            ObjectSetMaterial(self.id, self.defaultMaterial.name)
         self.lightProperties = {
             'style': lsOmni,
             'ambientColor': c_black,
@@ -246,17 +240,9 @@ class X3DObject:
             
     #TODO: other light functions
 
-    def setShader(self, shaderId):
-        if self.className != 'TGLLightSource':
-            if self.material != None:
-                MaterialSetShader(self.material.name, shaderId)
-            else:
-                MaterialSetShader(self.defaultMaterial.name, shaderId)
-
 class X3DMaterial:
     name = ''
     textures = None
-    export = True
     
     def __init__(self, name, filename):
         self.name = name
@@ -426,7 +412,6 @@ class EditorApplication(Framework):
         ObjectSetPosition(self.text, 20, 20, 0)
         
         MaterialLibraryActivate(self.matlib)
-        self.defaultMaterial = '__default__'
         
         self.pluginSource = pluginBase.make_plugin_source(
             searchpath = ['./plugins'],
@@ -627,13 +612,11 @@ class EditorApplication(Framework):
         self.updateBoundingBox(self.selectedObject)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
-        self.selectedObject.setShader(self.outlineShader)
         self.callActions('selectObject', Event(object = obj.id))
     
     def unselectObjects(self):
         if self.selectedObject != None:
             obj = self.selectedObject
-            obj.setShader(0)
             ObjectHide(self.boundingBox)
             ObjectHide(self.gizmo)
             self.callActions('unselectObject', Event(object = obj.id))

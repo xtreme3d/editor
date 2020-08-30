@@ -14,8 +14,6 @@ def exportX3D(app, filename):
     }
     
     for mat in app.materials:
-        if not mat.export:
-            continue
         if len(mat.name) == 0:
             self.logError('Invalid material')
         if not mat.name in data['materials']:
