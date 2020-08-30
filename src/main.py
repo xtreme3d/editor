@@ -662,6 +662,7 @@ class EditorApplication(Framework):
             parentId = self.map
         className = unicode(className)
         creators = {
+            'TGLDummycube': lambda: DummycubeCreate(parentId),
             'TGLPlane': lambda: PlaneCreate(1, 1, 1, 1, 1, parentId),
             'TGLCube': lambda: CubeCreate(1, 1, 1, parentId),
             'TGLSphere': lambda: SphereCreate(1, 16, 8, parentId),

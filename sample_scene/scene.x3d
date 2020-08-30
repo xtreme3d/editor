@@ -49,7 +49,30 @@
                 1.0,
                 1.0
             ],
-            "name": "",
+            "name": "root",
+            "filename": "",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "material": "",
+            "class": "TGLDummycube",
+            "parentIndex": 0
+        },
+        {
+            "index": 2,
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "name": "cube0",
             "filename": "",
             "position": [
                 0.0,
@@ -63,16 +86,16 @@
             ],
             "material": "material0",
             "class": "TGLCube",
-            "parentIndex": 0
+            "parentIndex": 1
         },
         {
-            "index": 2,
+            "index": 3,
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
-            "name": "",
+            "name": "teapot0",
             "filename": "",
             "position": [
                 0.0,
@@ -86,16 +109,16 @@
             ],
             "material": "material1",
             "class": "TGLTeapot",
-            "parentIndex": 1
+            "parentIndex": 2
         },
         {
-            "index": 3,
+            "index": 4,
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
-            "name": "",
+            "name": "light0",
             "filename": "",
             "position": [
                 2.0,
@@ -109,7 +132,7 @@
             ],
             "material": "",
             "class": "TGLLightSource",
-            "parentIndex": 0
+            "parentIndex": 1
         }
     ],
     "name": "My Map",
