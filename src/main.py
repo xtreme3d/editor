@@ -114,13 +114,7 @@ class X3DClickArea:
         MaterialLibraryActivate(app.matlib)
     
     def mouseOver(self):
-        x = ObjectGetAbsolutePosition(self.iconId, 0)
-        y = ObjectGetAbsolutePosition(self.iconId, 1)
-        a = app.mouseX > x - self.iconSize * 0.5
-        b = app.mouseX < x + self.iconSize * 0.5
-        c = app.mouseY > y - self.iconSize * 0.5
-        d = app.mouseY < y + self.iconSize * 0.5 
-        return a and b and c and d
+        return bool(int(HUDSpriteGetMouseOver(self.iconId, self.app.viewer)))
     
     def cleanup(self):
         ObjectDestroy(self.iconId)
@@ -133,6 +127,13 @@ class X3DClickArea:
         sy = ViewerWorldToScreen(self.app.viewer, x, y, z, 1)
         sz = ViewerWorldToScreen(self.app.viewer, x, y, z, 2)
         ObjectSetPosition(self.iconId, sx, app.windowHeight - sy, sz)
+        selected = False
+        if self.app.selectedObject != None:
+            selected = self.app.selectedObject == self.targetObject
+        if self.mouseOver() or selected:
+            SpriteSetSize(self.iconId, self.iconSize * 1.2, self.iconSize * 1.2)
+        else:
+            SpriteSetSize(self.iconId, self.iconSize, self.iconSize)
 
 class X3DObject:
     app = None
