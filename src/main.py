@@ -273,6 +273,16 @@ def vneg(v1):
 def vmuls(v1, s1):
     return (v1[0] * s1, v1[1] * s1, v1[2] * s1)
 
+def vdivs(v1, s1):
+    return (v1[0] / s1, v1[1] / s1, v1[2] / s1)
+
+def vnorm(v1):
+    vlen = math.sqrt(vdot(v1, v1))
+    if vlen > 0.00001:
+        return vdivs(v1, vlen)
+    else:
+        return (0, 0, 0)
+
 def rayPlaneIsec(rayP, rayD, planeP, planeN):
     d = vdot(planeP, vneg(planeN));
     rayDotPlane = vdot(rayD, planeN)
@@ -676,8 +686,7 @@ class EditorApplication(Framework):
                     MaterialSetDiffuseColor('gizmoBlue', c_blue, 1.0)
                     self.unselectObjects()
                 MaterialLibraryActivate(self.matlib)
-            
-                self.startDrag()
+            self.startDrag()
         
         self.callActions('mouseButtonDown', Event(button = button))
         
@@ -731,6 +740,9 @@ class EditorApplication(Framework):
         self.dirStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 0, 1))
         self.upStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 1, 0))
         self.rightStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (1, 0, 0))
+        screenX = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 0) - self.mouseX
+        screenY = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 1) - self.mouseY
+        self.screenAngleOld = math.atan2(screenY, screenX)
     
     def unselectObjects(self):
         if self.selectedObject != None:
@@ -753,13 +765,19 @@ class EditorApplication(Framework):
         ViewerResize(self.viewer, 0, 0, width, height)
     
     def dragSelectedObject(self):
-        dx = (self.mouseX - self.previousMouseX);
-        dy = (self.mouseY - self.previousMouseY);
+        dx = self.mouseX - self.previousMouseX
+        dy = self.mouseY - self.previousMouseY
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         
         if self.selectedObject != None:
             id = self.selectedObject.id
+            
+            screenX = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 0) - self.mouseX
+            screenY = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 1) - self.mouseY
+            screenAngle = math.atan2(screenY, screenX)
+            screenDeltaAngle = screenAngle - self.screenAngleOld
+            self.screenAngleOld = screenAngle
             
             cx = ObjectGetAbsolutePosition(self.camera, 0);
             cy = ObjectGetAbsolutePosition(self.camera, 1);
@@ -775,10 +793,6 @@ class EditorApplication(Framework):
             xzDelta = vsub(upNew, self.upStart)
             yzDelta = vsub(rightNew, self.rightStart)
             
-            self.dirStart = dirNew
-            self.upStart = upNew
-            self.rightStart = rightNew
-            
             vDelta = (xzDelta[0], yzDelta[1], xzDelta[2])
             
             if self.transformationMode == 0:
@@ -792,11 +806,40 @@ class EditorApplication(Framework):
                     move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
             elif self.transformationMode == 1:
-                if self.dragAxis == 1:
-                    #turn = math.atan2()
-                    #ObjectTurn(id, turn)
-                    pass
-                
+                if self.dragAxis == 0:
+                    toMouseStart = vsub(self.rightStart, (self.px, self.py, self.pz))
+                    toMouseCurr = vsub(rightNew, (self.px, self.py, self.pz))
+                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
+                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
+                    deltaAngle = math.degrees(math.acos(deltaAngle))
+                    sign = -1
+                    if screenDeltaAngle < 0:
+                        sign = 1
+                    ObjectPitch(id, deltaAngle * sign)
+                elif self.dragAxis == 1:
+                    toMouseStart = vsub(self.upStart, (self.px, self.py, self.pz))
+                    toMouseCurr = vsub(upNew, (self.px, self.py, self.pz))
+                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
+                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
+                    deltaAngle = math.degrees(math.acos(deltaAngle))
+                    sign = 1
+                    if screenDeltaAngle < 0:
+                        sign = -1
+                    ObjectTurn(id, deltaAngle * sign)
+                elif self.dragAxis == 2:
+                    toMouseStart = vsub(self.dirStart, (self.px, self.py, self.pz))
+                    toMouseCurr = vsub(dirNew, (self.px, self.py, self.pz))
+                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
+                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
+                    deltaAngle = math.degrees(math.acos(deltaAngle))
+                    sign = 1
+                    if screenDeltaAngle < 0:
+                        sign = -1
+                    ObjectRoll(id, deltaAngle * sign)
+            
+            self.dirStart = dirNew
+            self.upStart = upNew
+            self.rightStart = rightNew
             self.updateBoundingBox(self.selectedObject)
     
     def controlNavigator(self, dt):
