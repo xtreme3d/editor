@@ -291,6 +291,8 @@ class EditorApplication(Framework):
     mapCopyright = 'Copyright (C) %s %s' % (now.year, userName)
 
     selectedObject = None
+    
+    transformationMode = 0
     mouseSensibility = 0.3
     previousMouseX = 0
     previousMouseY = 0
@@ -409,7 +411,34 @@ class EditorApplication(Framework):
         MaterialSetOptions('gizmoBlue', True, True)
         MaterialSetBlendingMode('gizmoBlue', bmOpaque)
         
+        self.gizmoTranslation = DummycubeCreate(self.gizmo)
+        
+        self.gizmoAxisX = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
+        ObjectSetPositionX(self.gizmoAxisX, 0.5)
+        ObjectRotate(self.gizmoAxisX, 90, 90, 0)
+        self.gizmoArrowX = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoAxisX)
+        ObjectSetPositionY(self.gizmoArrowX, 0.5)
+        ObjectSetMaterial(self.gizmoAxisX, 'gizmoRed')
+        ObjectSetMaterial(self.gizmoArrowX, 'gizmoRed')
+        
+        self.gizmoAxisY = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
+        ObjectSetPositionY(self.gizmoAxisY, 0.5)
+        self.gizmoArrowY = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoAxisY)
+        ObjectSetPositionY(self.gizmoArrowY, 0.5)
+        ObjectSetMaterial(self.gizmoAxisY, 'gizmoGreen')
+        ObjectSetMaterial(self.gizmoArrowY, 'gizmoGreen')
+        
+        self.gizmoAxisZ = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
+        ObjectSetPositionZ(self.gizmoAxisZ, 0.5)
+        ObjectRotate(self.gizmoAxisZ, 90, 0, 0)
+        self.gizmoArrowZ = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoAxisZ)
+        ObjectSetPositionY(self.gizmoArrowZ, -0.5)
+        ObjectPitch(self.gizmoArrowZ, 180)
+        ObjectSetMaterial(self.gizmoAxisZ, 'gizmoBlue')
+        ObjectSetMaterial(self.gizmoArrowZ, 'gizmoBlue')
+        
         self.gizmoRotation = DummycubeCreate(self.gizmo)
+        ObjectHide(self.gizmoRotation)
         
         self.gizmoDiskX = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskX, 0, -90, 0)
@@ -422,31 +451,8 @@ class EditorApplication(Framework):
         self.gizmoDiskZ = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
         ObjectSetMaterial(self.gizmoDiskZ, 'gizmoBlue')
         
-        self.gizmoTranslation = DummycubeCreate(self.gizmo)
-        
-        self.gizmoX = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
-        ObjectSetPositionX(self.gizmoX, 0.5)
-        ObjectRotate(self.gizmoX, 90, 90, 0)
-        self.gizmoArrowX = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoX)
-        ObjectSetPositionY(self.gizmoArrowX, 0.5)
-        ObjectSetMaterial(self.gizmoX, 'gizmoRed')
-        ObjectSetMaterial(self.gizmoArrowX, 'gizmoRed')
-        
-        self.gizmoY = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
-        ObjectSetPositionY(self.gizmoY, 0.5)
-        self.gizmoArrowY = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoY)
-        ObjectSetPositionY(self.gizmoArrowY, 0.5)
-        ObjectSetMaterial(self.gizmoY, 'gizmoGreen')
-        ObjectSetMaterial(self.gizmoArrowY, 'gizmoGreen')
-        
-        self.gizmoZ = CylinderCreate(0.04, 0.04, 1.0, 6, 1, 1, self.gizmoTranslation)
-        ObjectSetPositionZ(self.gizmoZ, 0.5)
-        ObjectRotate(self.gizmoZ, 90, 0, 0)
-        self.gizmoArrowZ = ConeCreate(0.1, 0.25, 8, 1, 1, self.gizmoZ)
-        ObjectSetPositionY(self.gizmoArrowZ, -0.5)
-        ObjectPitch(self.gizmoArrowZ, 180)
-        ObjectSetMaterial(self.gizmoZ, 'gizmoBlue')
-        ObjectSetMaterial(self.gizmoArrowZ, 'gizmoBlue')
+        self.gizmoScale = DummycubeCreate(self.gizmo)
+        ObjectHide(self.gizmoScale)
         
         self.icons = DummycubeCreate(self.front)
         MaterialCreate('icons', 'data/icons.png')
@@ -603,6 +609,16 @@ class EditorApplication(Framework):
             return None
 
     def onKeyDown(self, key):
+        if key == KEY_T:
+            self.transformationMode = 0
+            ObjectHide(self.gizmoRotation)
+            ObjectHide(self.gizmoScale)
+            ObjectShow(self.gizmoTranslation)
+        if key == KEY_R:
+            self.transformationMode = 1
+            ObjectHide(self.gizmoTranslation)
+            ObjectHide(self.gizmoScale)
+            ObjectShow(self.gizmoRotation)
         if self.keyComboPressed(KEY_I, KEY_LCTRL) or self.keyComboPressed(KEY_I, KEY_RCTRL):
             filePath = tkFileDialog.askopenfilename(filetypes = supportedMeshFormats)
             if len(filePath) > 0:
@@ -635,11 +651,11 @@ class EditorApplication(Framework):
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         if button == MB_LEFT:
-            if ObjectIsPicked(self.gizmoX, self.viewer, self.mouseX, self.mouseY):
+            if ObjectIsPicked(self.gizmoAxisX, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 0
-            elif ObjectIsPicked(self.gizmoY, self.viewer, self.mouseX, self.mouseY):
+            elif ObjectIsPicked(self.gizmoAxisY, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 1
-            elif ObjectIsPicked(self.gizmoZ, self.viewer, self.mouseX, self.mouseY):
+            elif ObjectIsPicked(self.gizmoAxisZ, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 2
             else:
                 self.dragAxis = -1
@@ -740,10 +756,7 @@ class EditorApplication(Framework):
             
             vDelta = (xzDelta[0], yzDelta[1], xzDelta[2])
             
-            if self.keyPressed(KEY_R):
-                #TODO: rotate
-                pass
-            else:
+            if self.transformationMode == 0:
                 if self.dragAxis == 0:
                     strafe = -vdot(vDelta, (self.rx, self.ry, self.rz))
                     ObjectStrafe(id, strafe)
@@ -753,7 +766,10 @@ class EditorApplication(Framework):
                 elif self.dragAxis == 2:
                     move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
-            
+            elif self.transformationMode == 1:
+                #TODO: rotate
+                pass
+                
             self.updateBoundingBox(self.selectedObject)
     
     def controlNavigator(self, dt):
