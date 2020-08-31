@@ -125,6 +125,7 @@
             ],
             "name": "mesh0",
             "filename": "models/suzanne.obj",
+            "parentIndex": 1,
             "position": [
                 2.0,
                 1.0,

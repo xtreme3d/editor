@@ -312,7 +312,7 @@ class EditorApplication(Framework):
         ViewerSetLighting(self.viewer, True)
         ViewerEnableFog(self.viewer, True)
         ViewerSetFogColor(self.viewer, c_dkgray)
-        ViewerSetFogDistance(self.viewer, 50, 100)
+        ViewerSetFogDistance(self.viewer, 0, 50)
         ViewerEnableVSync(self.viewer, vsmSync)
         ViewerSetAutoRender(self.viewer, False)
         
@@ -347,8 +347,10 @@ class EditorApplication(Framework):
         
         self.plane = PlaneCreate(0, 100, 100, 100, 100, self.scene)
         MaterialCreate('mGround', 'data/tiles.png')
-        MaterialSetOptions('mGround', 1, 1)
+        MaterialSetOptions('mGround', 0, 1)
         MaterialSetTextureWrap('mGround', True)
+        MaterialSetDiffuseColor('mGround', c_white, 0.5)
+        MaterialSetBlendingMode('mGround', bmTransparency)
         ObjectSetMaterial(self.plane, 'mGround')
         ObjectPitch(self.plane, 90)
         
@@ -357,7 +359,7 @@ class EditorApplication(Framework):
         DummycubeSetEdgeColor(self.boundingBox, c_white)
         ObjectHide(self.boundingBox)
         
-        self.gizmo = DummycubeCreate(self.scene)
+        self.gizmo = DummycubeCreate(self.front)
         ObjectSetScale(self.gizmo, 0.75, 0.75, 0.75)
         ObjectHide(self.gizmo)
         ObjectIgnoreDepthBuffer(self.gizmo, True)
@@ -370,6 +372,7 @@ class EditorApplication(Framework):
         MaterialCreate('gizmoRed', '')
         MaterialSetDiffuseColor('gizmoRed', c_red, 1.0)
         MaterialSetOptions('gizmoRed', True, True)
+        MaterialSetBlendingMode('gizmoRed', bmOpaque)
         ObjectSetMaterial(self.gizmoX, 'gizmoRed')
         ObjectSetMaterial(self.gizmoArrowX, 'gizmoRed')
         
@@ -380,6 +383,7 @@ class EditorApplication(Framework):
         MaterialCreate('gizmoGreen', '')
         MaterialSetDiffuseColor('gizmoGreen', c_lime, 1.0)
         MaterialSetOptions('gizmoGreen', True, True)
+        MaterialSetBlendingMode('gizmoGreen', bmOpaque)
         ObjectSetMaterial(self.gizmoY, 'gizmoGreen')
         ObjectSetMaterial(self.gizmoArrowY, 'gizmoGreen')
         
@@ -392,6 +396,7 @@ class EditorApplication(Framework):
         MaterialCreate('gizmoBlue', '')
         MaterialSetDiffuseColor('gizmoBlue', c_blue, 1.0)
         MaterialSetOptions('gizmoBlue', True, True)
+        MaterialSetBlendingMode('gizmoBlue', bmOpaque)
         ObjectSetMaterial(self.gizmoZ, 'gizmoBlue')
         ObjectSetMaterial(self.gizmoArrowZ, 'gizmoBlue')
         
