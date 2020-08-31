@@ -796,7 +796,7 @@ class EditorApplication(Framework):
             screenX = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 0) - self.mouseX
             screenY = ViewerWorldToScreen(self.viewer, self.px, self.py, self.pz, 1) - self.mouseY
             screenAngle = math.atan2(screenY, screenX)
-            screenDeltaAngle = screenAngle - self.screenAngleOld
+            screenDeltaAngle = math.degrees(screenAngle - self.screenAngleOld)
             self.screenAngleOld = screenAngle
             
             cx = ObjectGetAbsolutePosition(self.camera, 0);
@@ -826,37 +826,13 @@ class EditorApplication(Framework):
                     move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
             elif self.transformationMode == 1:
+                #TODO: determine screenDeltaAngle sign
                 if self.dragAxis == 0:
-                    toMouseStart = vsub(self.rightStart, (self.px, self.py, self.pz))
-                    toMouseCurr = vsub(rightNew, (self.px, self.py, self.pz))
-                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
-                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
-                    deltaAngle = math.degrees(math.acos(deltaAngle))
-                    sign = -1
-                    if screenDeltaAngle < 0:
-                        sign = 1
-                    ObjectPitch(id, deltaAngle * sign)
+                    ObjectPitch(id, -screenDeltaAngle)
                 elif self.dragAxis == 1:
-                    toMouseStart = vsub(self.upStart, (self.px, self.py, self.pz))
-                    toMouseCurr = vsub(upNew, (self.px, self.py, self.pz))
-                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
-                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
-                    deltaAngle = math.degrees(math.acos(deltaAngle))
-                    sign = 1
-                    if screenDeltaAngle < 0:
-                        sign = -1
-                    ObjectTurn(id, deltaAngle * sign)
+                    ObjectTurn(id, -screenDeltaAngle)
                 elif self.dragAxis == 2:
-                    toMouseStart = vsub(self.dirStart, (self.px, self.py, self.pz))
-                    toMouseCurr = vsub(dirNew, (self.px, self.py, self.pz))
-                    deltaAngle = vdot(vnorm(toMouseStart), vnorm(toMouseCurr))
-                    deltaAngle = max(min(deltaAngle, 1.0), -1.0)
-                    deltaAngle = math.degrees(math.acos(deltaAngle))
-                    sign = 1
-                    if screenDeltaAngle < 0:
-                        sign = -1
-                    ObjectRoll(id, deltaAngle * sign)
-            
+                    ObjectRoll(id, -screenDeltaAngle)
             self.dirStart = dirNew
             self.upStart = upNew
             self.rightStart = rightNew
