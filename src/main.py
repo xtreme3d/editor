@@ -624,9 +624,10 @@ class EditorApplication(Framework):
             self.selectedObject = None
     
     def updateBoundingBox(self, obj):
-        ObjectSetPositionOfObject(self.gizmo, obj.id)
-        ObjectSetPositionOfObject(self.boundingBox, obj.id)
-        ObjectAlignWithObject(self.boundingBox, obj.id)
+        #ObjectSetPositionOfObject(self.gizmo, obj.id)
+        #ObjectSetPositionOfObject(self.boundingBox, obj.id)
+        ObjectExportAbsoluteMatrix(obj.id, self.boundingBox)
+        ObjectExportAbsoluteMatrix(obj.id, self.gizmo)
         sx = ObjectGetScale(obj.id, 0)
         sy = ObjectGetScale(obj.id, 1)
         sz = ObjectGetScale(obj.id, 2)
@@ -653,19 +654,35 @@ class EditorApplication(Framework):
             ry = ObjectGetAbsoluteRight(id, 1)
             rz = ObjectGetAbsoluteRight(id, 2)
             
-            if self.dragAxis == 0:
-                vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
-                vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
-                strafe = rx * vx + rz * vz
-                ObjectTranslate(id, strafe, 0, 0)
-            elif self.dragAxis == 1:
-                lift = -(uy * dy * 0.01)
-                ObjectTranslate(id, 0, lift, 0)
-            elif self.dragAxis == 2:
-                vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 0)
-                vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, 0, 1, 0, 2)
-                move = dirx * vx + dirz * vz
-                ObjectTranslate(id, 0, 0, move)
+            if self.keyPressed(KEY_R):
+                if self.dragAxis == 0:
+                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
+                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
+                    pitch = -(rx * vx + rz * vz) * 60
+                    ObjectPitch(id, pitch)
+                elif self.dragAxis == 1:
+                    turn = dx * 0.5
+                    ObjectTurn(id, turn)
+                elif self.dragAxis == 2:
+                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
+                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
+                    roll = -(dirx * vx + dirz * vz) * 60
+                    ObjectRoll(id, roll)
+            else:
+                if self.dragAxis == 0:
+                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
+                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
+                    strafe = -(rx * vx + rz * vz)
+                    ObjectStrafe(id, strafe)
+                elif self.dragAxis == 1:
+                    lift = -(uy * dy * 0.01)
+                    ObjectLift(id, lift)
+                elif self.dragAxis == 2:
+                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
+                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
+                    move = dirx * vx + dirz * vz
+                    ObjectMove(id, move)
+            
             self.updateBoundingBox(self.selectedObject)
     
     def controlNavigator(self, dt):
