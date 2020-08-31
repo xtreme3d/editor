@@ -806,8 +806,7 @@ class EditorApplication(Framework):
                     move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
             elif self.transformationMode == 1:
-                #TODO: rotate
-                print(self.dragAxis)
+                #TODO: rotate by self.dragAxis
                 pass
                 
             self.updateBoundingBox(self.selectedObject)
