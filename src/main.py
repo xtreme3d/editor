@@ -440,6 +440,26 @@ class EditorApplication(Framework):
         self.gizmoRotation = DummycubeCreate(self.gizmo)
         ObjectHide(self.gizmoRotation)
         
+        self.gizmoDiskPlaneX = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        ObjectRotate(self.gizmoDiskPlaneX, 0, -90, 0)
+        ObjectSetMaterial(self.gizmoDiskPlaneX, 'gizmoRed')
+        self.gizmoDiskPlaneXBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneX)
+        ObjectRotate(self.gizmoDiskPlaneXBack, 180, 0, 0)
+        ObjectHide(self.gizmoDiskPlaneX)
+        
+        self.gizmoDiskPlaneY = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        ObjectRotate(self.gizmoDiskPlaneY, 90, 0, 0)
+        ObjectSetMaterial(self.gizmoDiskPlaneY, 'gizmoGreen')
+        self.gizmoDiskPlaneYBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneY)
+        ObjectRotate(self.gizmoDiskPlaneYBack, 180, 0, 0)
+        ObjectHide(self.gizmoDiskPlaneY)
+        
+        self.gizmoDiskPlaneZ = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        ObjectSetMaterial(self.gizmoDiskPlaneZ, 'gizmoBlue')
+        self.gizmoDiskPlaneZBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneZ)
+        ObjectRotate(self.gizmoDiskPlaneZBack, 180, 0, 0)
+        ObjectHide(self.gizmoDiskPlaneZ)
+        
         self.gizmoDiskX = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskX, 0, -90, 0)
         ObjectSetMaterial(self.gizmoDiskX, 'gizmoRed')
@@ -651,11 +671,26 @@ class EditorApplication(Framework):
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         if button == MB_LEFT:
+            ObjectShow(self.gizmoDiskPlaneX)
+            ObjectShow(self.gizmoDiskPlaneY)
+            ObjectShow(self.gizmoDiskPlaneZ)
             if ObjectIsPicked(self.gizmoAxisX, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 0
             elif ObjectIsPicked(self.gizmoAxisY, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 1
             elif ObjectIsPicked(self.gizmoAxisZ, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 2
+            elif ObjectIsPicked(self.gizmoDiskPlaneX, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 0
+            elif ObjectIsPicked(self.gizmoDiskPlaneXBack, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 0
+            elif ObjectIsPicked(self.gizmoDiskPlaneY, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 1
+            elif ObjectIsPicked(self.gizmoDiskPlaneYBack, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 1
+            elif ObjectIsPicked(self.gizmoDiskPlaneZ, self.viewer, self.mouseX, self.mouseY):
+                self.dragAxis = 2
+            elif ObjectIsPicked(self.gizmoDiskPlaneZBack, self.viewer, self.mouseX, self.mouseY):
                 self.dragAxis = 2
             else:
                 self.dragAxis = -1
@@ -664,6 +699,9 @@ class EditorApplication(Framework):
                 if pickedObj != None:
                     self.selectObject(pickedObj)
                     id = self.selectedObject.id
+            ObjectHide(self.gizmoDiskPlaneX)
+            ObjectHide(self.gizmoDiskPlaneY)
+            ObjectHide(self.gizmoDiskPlaneZ)
             self.startDrag()
         self.callActions('mouseButtonDown', Event(button = button))
         
@@ -768,6 +806,7 @@ class EditorApplication(Framework):
                     ObjectMove(id, move)
             elif self.transformationMode == 1:
                 #TODO: rotate
+                print(self.dragAxis)
                 pass
                 
             self.updateBoundingBox(self.selectedObject)
