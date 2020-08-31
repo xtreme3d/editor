@@ -374,6 +374,8 @@ class EditorApplication(Framework):
         NavigatorSetUseVirtualUp(self.navigator, True)
         NavigatorSetVirtualUp(self.navigator, 0, 1, 0)
         
+        self.mouseRay = DummycubeCreate(self.scene)
+        
         self.plane = PlaneCreate(0, 100, 100, 100, 100, self.scene)
         MaterialCreate('mGround', 'data/tiles.png')
         MaterialSetOptions('mGround', 0, 1)
@@ -671,26 +673,19 @@ class EditorApplication(Framework):
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         if button == MB_LEFT:
+            ObjectHide(self.gizmoDiskX)
+            ObjectHide(self.gizmoDiskY)
+            ObjectHide(self.gizmoDiskZ)
             ObjectShow(self.gizmoDiskPlaneX)
             ObjectShow(self.gizmoDiskPlaneY)
             ObjectShow(self.gizmoDiskPlaneZ)
-            if ObjectIsPicked(self.gizmoAxisX, self.viewer, self.mouseX, self.mouseY):
+            
+            obj = ObjectSceneRaycast(self.mouseRay, self.gizmo);
+            if obj == self.gizmoAxisX or obj == self.gizmoDiskPlaneX or obj == self.gizmoDiskPlaneXBack:
                 self.dragAxis = 0
-            elif ObjectIsPicked(self.gizmoAxisY, self.viewer, self.mouseX, self.mouseY):
+            elif obj == self.gizmoAxisY or obj == self.gizmoDiskPlaneY or obj == self.gizmoDiskPlaneYBack:
                 self.dragAxis = 1
-            elif ObjectIsPicked(self.gizmoAxisZ, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 2
-            elif ObjectIsPicked(self.gizmoDiskPlaneX, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 0
-            elif ObjectIsPicked(self.gizmoDiskPlaneXBack, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 0
-            elif ObjectIsPicked(self.gizmoDiskPlaneY, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 1
-            elif ObjectIsPicked(self.gizmoDiskPlaneYBack, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 1
-            elif ObjectIsPicked(self.gizmoDiskPlaneZ, self.viewer, self.mouseX, self.mouseY):
-                self.dragAxis = 2
-            elif ObjectIsPicked(self.gizmoDiskPlaneZBack, self.viewer, self.mouseX, self.mouseY):
+            elif obj == self.gizmoAxisZ or obj == self.gizmoDiskPlaneZ or obj == self.gizmoDiskPlaneZBack:
                 self.dragAxis = 2
             else:
                 self.dragAxis = -1
@@ -699,10 +694,16 @@ class EditorApplication(Framework):
                 if pickedObj != None:
                     self.selectObject(pickedObj)
                     id = self.selectedObject.id
+            
             ObjectHide(self.gizmoDiskPlaneX)
             ObjectHide(self.gizmoDiskPlaneY)
             ObjectHide(self.gizmoDiskPlaneZ)
+            ObjectShow(self.gizmoDiskX)
+            ObjectShow(self.gizmoDiskY)
+            ObjectShow(self.gizmoDiskZ)
+            
             self.startDrag()
+        
         self.callActions('mouseButtonDown', Event(button = button))
         
     def onMouseButtonUp(self, button):
@@ -832,6 +833,12 @@ class EditorApplication(Framework):
                 
         if self.mouseButtonPressed(MB_RIGHT):
             self.controlNavigator(dt)
+        
+        rx = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 0)
+        ry = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 1)
+        rz = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 2)
+        ObjectSetPositionOfObject(self.mouseRay, self.camera)
+        ObjectSetAbsoluteDirection(self.mouseRay, rx, ry, rz)
         
         if self.selectedObject != None:
             obj = self.selectedObject
