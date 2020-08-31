@@ -444,12 +444,12 @@ class EditorApplication(Framework):
         ObjectRotate(self.gizmoDiskX, 0, -90, 0)
         ObjectSetMaterial(self.gizmoDiskX, 'gizmoRed')
         
+        self.gizmoDiskZ = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
+        ObjectSetMaterial(self.gizmoDiskZ, 'gizmoBlue')
+        
         self.gizmoDiskY = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskY, 90, 0, 0)
         ObjectSetMaterial(self.gizmoDiskY, 'gizmoGreen')
-        
-        self.gizmoDiskZ = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
-        ObjectSetMaterial(self.gizmoDiskZ, 'gizmoBlue')
         
         self.gizmoScale = DummycubeCreate(self.gizmo)
         ObjectHide(self.gizmoScale)
