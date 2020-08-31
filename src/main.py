@@ -442,23 +442,23 @@ class EditorApplication(Framework):
         self.gizmoRotation = DummycubeCreate(self.gizmo)
         ObjectHide(self.gizmoRotation)
         
-        self.gizmoDiskPlaneX = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        self.gizmoDiskPlaneX = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskPlaneX, 0, -90, 0)
         ObjectSetMaterial(self.gizmoDiskPlaneX, 'gizmoRed')
-        self.gizmoDiskPlaneXBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneX)
+        self.gizmoDiskPlaneXBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneX)
         ObjectRotate(self.gizmoDiskPlaneXBack, 180, 0, 0)
         ObjectHide(self.gizmoDiskPlaneX)
         
-        self.gizmoDiskPlaneY = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        self.gizmoDiskPlaneY = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskPlaneY, 90, 0, 0)
         ObjectSetMaterial(self.gizmoDiskPlaneY, 'gizmoGreen')
-        self.gizmoDiskPlaneYBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneY)
+        self.gizmoDiskPlaneYBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneY)
         ObjectRotate(self.gizmoDiskPlaneYBack, 180, 0, 0)
         ObjectHide(self.gizmoDiskPlaneY)
         
-        self.gizmoDiskPlaneZ = PlaneCreate(1, 2, 2, 1, 1, self.gizmoRotation)
+        self.gizmoDiskPlaneZ = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
         ObjectSetMaterial(self.gizmoDiskPlaneZ, 'gizmoBlue')
-        self.gizmoDiskPlaneZBack = PlaneCreate(1, 2, 2, 1, 1, self.gizmoDiskPlaneZ)
+        self.gizmoDiskPlaneZBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneZ)
         ObjectRotate(self.gizmoDiskPlaneZBack, 180, 0, 0)
         ObjectHide(self.gizmoDiskPlaneZ)
         
@@ -673,36 +673,25 @@ class EditorApplication(Framework):
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
         if button == MB_LEFT:
-            ObjectHide(self.gizmoDiskX)
-            ObjectHide(self.gizmoDiskY)
-            ObjectHide(self.gizmoDiskZ)
-            ObjectShow(self.gizmoDiskPlaneX)
-            ObjectShow(self.gizmoDiskPlaneY)
-            ObjectShow(self.gizmoDiskPlaneZ)
+            if self.selectedObject != None:
+                ObjectShow(self.gizmoDiskPlaneX)
+                ObjectShow(self.gizmoDiskPlaneY)
+                ObjectShow(self.gizmoDiskPlaneZ)
+                obj = ObjectSceneRaycast(self.mouseRay, self.gizmo);
+                if obj == self.gizmoAxisX or obj == self.gizmoArrowX or obj == self.gizmoDiskPlaneX or obj == self.gizmoDiskPlaneXBack:
+                    self.dragAxis = 0
+                elif obj == self.gizmoAxisY or obj == self.gizmoArrowY or obj == self.gizmoDiskPlaneY or obj == self.gizmoDiskPlaneYBack:
+                    self.dragAxis = 1
+                elif obj == self.gizmoAxisZ or obj == self.gizmoArrowZ or obj == self.gizmoDiskPlaneZ or obj == self.gizmoDiskPlaneZBack:
+                    self.dragAxis = 2
+                else:
+                    self.dragAxis = -1
+                    self.unselectObjects()
+                ObjectHide(self.gizmoDiskPlaneX)
+                ObjectHide(self.gizmoDiskPlaneY)
+                ObjectHide(self.gizmoDiskPlaneZ)
             
-            obj = ObjectSceneRaycast(self.mouseRay, self.gizmo);
-            if obj == self.gizmoAxisX or obj == self.gizmoDiskPlaneX or obj == self.gizmoDiskPlaneXBack:
-                self.dragAxis = 0
-            elif obj == self.gizmoAxisY or obj == self.gizmoDiskPlaneY or obj == self.gizmoDiskPlaneYBack:
-                self.dragAxis = 1
-            elif obj == self.gizmoAxisZ or obj == self.gizmoDiskPlaneZ or obj == self.gizmoDiskPlaneZBack:
-                self.dragAxis = 2
-            else:
-                self.dragAxis = -1
-                self.unselectObjects()
-                pickedObj = self.pickObject()
-                if pickedObj != None:
-                    self.selectObject(pickedObj)
-                    id = self.selectedObject.id
-            
-            ObjectHide(self.gizmoDiskPlaneX)
-            ObjectHide(self.gizmoDiskPlaneY)
-            ObjectHide(self.gizmoDiskPlaneZ)
-            ObjectShow(self.gizmoDiskX)
-            ObjectShow(self.gizmoDiskY)
-            ObjectShow(self.gizmoDiskZ)
-            
-            self.startDrag()
+                self.startDrag()
         
         self.callActions('mouseButtonDown', Event(button = button))
         
@@ -710,6 +699,12 @@ class EditorApplication(Framework):
         self.callActions('mouseButtonUp', Event(button = button))
     
     def onClick(self, button):
+        pickedObj = self.pickObject()
+        if pickedObj != None:
+            self.unselectObjects()
+            self.selectObject(pickedObj)
+        elif self.dragAxis == -1:
+            self.unselectObjects()
         self.callActions('mouseClick', Event(button = button))
     
     def selectObject(self, obj):
