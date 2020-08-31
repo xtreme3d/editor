@@ -258,6 +258,33 @@ class X3DMaterial:
 def roundTo(a, step):
     return round(float(a) / step) * step
 
+def vdot(v1, v2):
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
+
+def vadd(v1, v2):
+    return (v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2])
+
+def vsub(v1, v2):
+    return (v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2])
+
+def vneg(v1):
+    return (-v1[0], -v1[1], -v1[2])
+
+def vmuls(v1, s1):
+    return (v1[0] * s1, v1[1] * s1, v1[2] * s1)
+
+def rayPlaneIsec(rayP, rayD, planeP, planeN):
+    d = vdot(planeP, vneg(planeN));
+    rayDotPlane = vdot(rayD, planeN)
+    t = 0
+    #if rayDotPlane > 0.0:
+    if rayDotPlane > 0.0 and rayDotPlane < 0.00001:
+        rayDotPlane = 0.00001
+    elif rayDotPlane < 0.0 and rayDotPlane > -0.00001:
+        rayDotPlane = -0.00001
+    t = -(d + vdot(rayP, planeN)) / rayDotPlane
+    return vadd(rayP, vmuls(rayD, t));
+
 class EditorApplication(Framework):
     mapName = 'My Map'
     mapAuthor = userName
@@ -595,17 +622,18 @@ class EditorApplication(Framework):
                 self.dragAxis = 2
             else:
                 self.dragAxis = -1
+                self.unselectObjects()
+                pickedObj = self.pickObject()
+                if pickedObj != None:
+                    self.selectObject(pickedObj)
+                    id = self.selectedObject.id
+            self.startDrag()
         self.callActions('mouseButtonDown', Event(button = button))
         
     def onMouseButtonUp(self, button):
         self.callActions('mouseButtonUp', Event(button = button))
     
     def onClick(self, button):
-        if button == MB_LEFT:
-            self.unselectObjects()
-            pickedObj = self.pickObject()
-            if pickedObj != None:
-                self.selectObject(pickedObj)
         self.callActions('mouseClick', Event(button = button))
     
     def selectObject(self, obj):
@@ -613,7 +641,34 @@ class EditorApplication(Framework):
         self.updateBoundingBox(self.selectedObject)
         ObjectShow(self.boundingBox)
         ObjectShow(self.gizmo)
+        
         self.callActions('selectObject', Event(object = obj.id))
+    
+    def startDrag(self):
+        if self.selectedObject == None:
+            return
+        id = self.selectedObject.id
+        self.dirx = ObjectGetAbsoluteDirection(id, 0)
+        self.diry = ObjectGetAbsoluteDirection(id, 1)
+        self.dirz = ObjectGetAbsoluteDirection(id, 2)
+        self.ux = ObjectGetAbsoluteUp(id, 0)
+        self.uy = ObjectGetAbsoluteUp(id, 1)
+        self.uz = ObjectGetAbsoluteUp(id, 2)
+        self.rx = ObjectGetAbsoluteRight(id, 0)
+        self.ry = ObjectGetAbsoluteRight(id, 1)
+        self.rz = ObjectGetAbsoluteRight(id, 2)
+        self.px = ObjectGetAbsolutePosition(id, 0);
+        self.py = ObjectGetAbsolutePosition(id, 1);
+        self.pz = ObjectGetAbsolutePosition(id, 2);
+        cx = ObjectGetAbsolutePosition(self.camera, 0);
+        cy = ObjectGetAbsolutePosition(self.camera, 1);
+        cz = ObjectGetAbsolutePosition(self.camera, 2);
+        rx = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 0)
+        ry = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 1)
+        rz = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 2)
+        self.dirStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 0, 1))
+        self.upStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 1, 0))
+        self.rightStart = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (1, 0, 0))
     
     def unselectObjects(self):
         if self.selectedObject != None:
@@ -624,8 +679,6 @@ class EditorApplication(Framework):
             self.selectedObject = None
     
     def updateBoundingBox(self, obj):
-        #ObjectSetPositionOfObject(self.gizmo, obj.id)
-        #ObjectSetPositionOfObject(self.boundingBox, obj.id)
         ObjectExportAbsoluteMatrix(obj.id, self.boundingBox)
         ObjectExportAbsoluteMatrix(obj.id, self.gizmo)
         sx = ObjectGetScale(obj.id, 0)
@@ -642,45 +695,42 @@ class EditorApplication(Framework):
         dy = (self.mouseY - self.previousMouseY);
         self.previousMouseX = self.mouseX
         self.previousMouseY = self.mouseY
+        
         if self.selectedObject != None:
             id = self.selectedObject.id
-            dirx = ObjectGetAbsoluteDirection(id, 0)
-            diry = ObjectGetAbsoluteDirection(id, 1)
-            dirz = ObjectGetAbsoluteDirection(id, 2)
-            ux = ObjectGetAbsoluteUp(id, 0)
-            uy = ObjectGetAbsoluteUp(id, 1)
-            uz = ObjectGetAbsoluteUp(id, 2)
-            rx = ObjectGetAbsoluteRight(id, 0)
-            ry = ObjectGetAbsoluteRight(id, 1)
-            rz = ObjectGetAbsoluteRight(id, 2)
+            
+            cx = ObjectGetAbsolutePosition(self.camera, 0);
+            cy = ObjectGetAbsolutePosition(self.camera, 1);
+            cz = ObjectGetAbsolutePosition(self.camera, 2);
+            rx = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 0)
+            ry = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 1)
+            rz = ViewerScreenToVector(self.viewer, self.mouseX, self.windowHeight - self.mouseY, 2)
+            dirNew = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 0, 1))
+            upNew = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (0, 1, 0))
+            rightNew = rayPlaneIsec((cx, cy, cz), (rx, ry, rz), (self.px, self.py, self.pz), (1, 0, 0))
+            
+            xyDelta = vsub(dirNew, self.dirStart)
+            xzDelta = vsub(upNew, self.upStart)
+            yzDelta = vsub(rightNew, self.rightStart)
+            
+            self.dirStart = dirNew
+            self.upStart = upNew
+            self.rightStart = rightNew
+            
+            vDelta = (xzDelta[0], yzDelta[1], xzDelta[2])
             
             if self.keyPressed(KEY_R):
-                if self.dragAxis == 0:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
-                    pitch = -(rx * vx + rz * vz) * 60
-                    ObjectPitch(id, pitch)
-                elif self.dragAxis == 1:
-                    turn = dx * 0.5
-                    ObjectTurn(id, turn)
-                elif self.dragAxis == 2:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
-                    roll = -(dirx * vx + dirz * vz) * 60
-                    ObjectRoll(id, roll)
+                #TODO: rotate
+                pass
             else:
                 if self.dragAxis == 0:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
-                    strafe = -(rx * vx + rz * vz)
+                    strafe = -vdot(vDelta, (self.rx, self.ry, self.rz))
                     ObjectStrafe(id, strafe)
                 elif self.dragAxis == 1:
-                    lift = -(uy * dy * 0.01)
+                    lift = vdot(vDelta, (self.ux, self.uy, self.uz))
                     ObjectLift(id, lift)
                 elif self.dragAxis == 2:
-                    vx = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 0)
-                    vz = CameraScreenDeltaToVector(self.camera, dx, -dy, 0.01, ux, uy, uz, 2)
-                    move = dirx * vx + dirz * vz
+                    move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
             
             self.updateBoundingBox(self.selectedObject)
