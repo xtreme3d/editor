@@ -395,6 +395,10 @@ class EditorApplication(Framework):
         ObjectHide(self.gizmo)
         ObjectIgnoreDepthBuffer(self.gizmo, True)
         
+        self.outlineShader = OutlineShaderCreate(0)
+        OutlineShaderSetLineColor(self.outlineShader, c_white)
+        OutlineShaderSetLineWidth(self.outlineShader, 3)
+        
         MaterialCreate('gizmoRed', '')
         MaterialSetFaceCulling('gizmoRed', fcNoCull)
         MaterialSetDiffuseColor('gizmoRed', c_red, 1.0)
@@ -677,16 +681,24 @@ class EditorApplication(Framework):
                 ObjectShow(self.gizmoDiskPlaneX)
                 ObjectShow(self.gizmoDiskPlaneY)
                 ObjectShow(self.gizmoDiskPlaneZ)
+                MaterialLibraryActivate(self.internalMatlib)
                 obj = ObjectSceneRaycast(self.mouseRay, self.gizmo);
                 if obj == self.gizmoAxisX or obj == self.gizmoArrowX or obj == self.gizmoDiskPlaneX or obj == self.gizmoDiskPlaneXBack:
                     self.dragAxis = 0
+                    MaterialSetDiffuseColor('gizmoRed', c_white, 1.0)
                 elif obj == self.gizmoAxisY or obj == self.gizmoArrowY or obj == self.gizmoDiskPlaneY or obj == self.gizmoDiskPlaneYBack:
                     self.dragAxis = 1
+                    MaterialSetDiffuseColor('gizmoGreen', c_white, 1.0)
                 elif obj == self.gizmoAxisZ or obj == self.gizmoArrowZ or obj == self.gizmoDiskPlaneZ or obj == self.gizmoDiskPlaneZBack:
                     self.dragAxis = 2
+                    MaterialSetDiffuseColor('gizmoBlue', c_white, 1.0)
                 else:
                     self.dragAxis = -1
+                    MaterialSetDiffuseColor('gizmoRed', c_red, 1.0)
+                    MaterialSetDiffuseColor('gizmoGreen', c_lime, 1.0)
+                    MaterialSetDiffuseColor('gizmoBlue', c_blue, 1.0)
                     self.unselectObjects()
+                MaterialLibraryActivate(self.matlib)
                 ObjectHide(self.gizmoDiskPlaneX)
                 ObjectHide(self.gizmoDiskPlaneY)
                 ObjectHide(self.gizmoDiskPlaneZ)
@@ -697,6 +709,11 @@ class EditorApplication(Framework):
         
     def onMouseButtonUp(self, button):
         self.callActions('mouseButtonUp', Event(button = button))
+        MaterialLibraryActivate(self.internalMatlib)
+        MaterialSetDiffuseColor('gizmoRed', c_red, 1.0)
+        MaterialSetDiffuseColor('gizmoGreen', c_lime, 1.0)
+        MaterialSetDiffuseColor('gizmoBlue', c_blue, 1.0)
+        MaterialLibraryActivate(self.matlib)
     
     def onClick(self, button):
         pickedObj = self.pickObject()
