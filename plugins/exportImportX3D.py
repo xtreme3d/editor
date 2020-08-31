@@ -43,7 +43,8 @@ def exportX3D(app, filename):
         objData = {
             'index': obj.index,
             'position': obj.getPosition(),
-            'rotation': obj.getRotation(),
+            'direction': obj.getDirection(),
+            'up': obj.getUp(),
             'scale': obj.getScale()
         }
         
@@ -126,7 +127,8 @@ def importX3D(app, filename):
                     objFilename = ''
         
         position = objData.get('position', [0, 0, 0])
-        rotation = objData.get('rotation', [0, 0, 0])
+        direction = objData.get('direction', [0, 0, 1])
+        up = objData.get('up', [0, 1, 0])
         scale = objData.get('scale', [0, 0, 0])
         matName = objData.get('material', '')
         obj = app.addObject(className, objFilename)
@@ -134,7 +136,8 @@ def importX3D(app, filename):
         obj.parentIndex = parentIndex
         obj.setName(name)
         obj.setPosition(position[0], position[1], position[2])
-        obj.setRotation(rotation[0], rotation[1], rotation[2])
+        obj.setDirection(direction[0], direction[1], direction[2])
+        obj.setUp(up[0], up[1], up[2])
         obj.setScale(scale[0], scale[1], scale[2])
         if len(matName) > 0:
             mat = app.getMaterialByName(matName)

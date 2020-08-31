@@ -14,18 +14,23 @@
     "objects": [
         {
             "index": 1,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
             "name": "root",
-            "position": [
+            "up": [
                 0.0,
-                0.0,
+                1.0,
                 0.0
             ],
-            "rotation": [
+            "position": [
                 0.0,
                 0.0,
                 0.0
@@ -34,6 +39,11 @@
         },
         {
             "index": 2,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
@@ -41,21 +51,26 @@
             ],
             "name": "cube0",
             "material": "material0",
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
             "parentIndex": 1,
             "position": [
                 0.0,
                 0.5,
                 0.0
             ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
             "class": "TGLCube"
         },
         {
             "index": 3,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
@@ -63,21 +78,26 @@
             ],
             "name": "teapot0",
             "material": "material1",
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
             "parentIndex": 2,
             "position": [
                 0.0,
                 0.7400000095367432,
                 0.0
             ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
             "class": "TGLTeapot"
         },
         {
             "index": 4,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
@@ -103,43 +123,53 @@
                 ],
                 "shining": 1
             },
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
             "parentIndex": 1,
             "position": [
                 2.0,
                 3.0,
                 2.0
             ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
             "class": "TGLLightSource"
         },
         {
             "index": 5,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
                 1.0
             ],
             "name": "mesh0",
-            "filename": "models/suzanne.obj",
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
             "parentIndex": 1,
             "position": [
                 2.0,
                 1.0,
                 0.0
             ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
+            "filename": "models/suzanne.obj",
             "class": "TGLFreeform"
         },
         {
             "index": 6,
+            "direction": [
+                0.0,
+                -0.0,
+                1.0
+            ],
             "scale": [
                 1.0,
                 1.0,
@@ -165,16 +195,16 @@
                 ],
                 "shining": 1
             },
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
             "parentIndex": 1,
             "position": [
                 -2.0,
                 1.0,
                 -2.0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
             ],
             "class": "TGLLightSource"
         }

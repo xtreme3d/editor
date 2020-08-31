@@ -213,6 +213,26 @@ class X3DObject:
             ObjectGetRoll(self.id)
         ]
     
+    def setDirection(self, x, y, z):
+        ObjectSetDirection(self.id, x, y, z)
+    
+    def getDirection(self):
+        return [
+            ObjectGetDirection(self.id, 0),
+            ObjectGetDirection(self.id, 1),
+            ObjectGetDirection(self.id, 2)
+        ]
+    
+    def setUp(self, x, y, z):
+        ObjectSetUpVector(self.id, x, y, z)
+    
+    def getUp(self):
+        return [
+            ObjectGetUp(self.id, 0),
+            ObjectGetUp(self.id, 1),
+            ObjectGetUp(self.id, 2)
+        ]
+    
     def setScale(self, x, y, z):
         ObjectSetScale(self.id, x, y, z)
     
