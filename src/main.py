@@ -446,26 +446,6 @@ class EditorApplication(Framework):
         self.gizmoRotation = DummycubeCreate(self.gizmo)
         ObjectHide(self.gizmoRotation)
         
-        self.gizmoDiskPlaneX = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
-        ObjectRotate(self.gizmoDiskPlaneX, 0, -90, 0)
-        ObjectSetMaterial(self.gizmoDiskPlaneX, 'gizmoRed')
-        self.gizmoDiskPlaneXBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneX)
-        ObjectRotate(self.gizmoDiskPlaneXBack, 180, 0, 0)
-        ObjectHide(self.gizmoDiskPlaneX)
-        
-        self.gizmoDiskPlaneY = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
-        ObjectRotate(self.gizmoDiskPlaneY, 90, 0, 0)
-        ObjectSetMaterial(self.gizmoDiskPlaneY, 'gizmoGreen')
-        self.gizmoDiskPlaneYBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneY)
-        ObjectRotate(self.gizmoDiskPlaneYBack, 180, 0, 0)
-        ObjectHide(self.gizmoDiskPlaneY)
-        
-        self.gizmoDiskPlaneZ = PlaneCreate(1, 3, 3, 1, 1, self.gizmoRotation)
-        ObjectSetMaterial(self.gizmoDiskPlaneZ, 'gizmoBlue')
-        self.gizmoDiskPlaneZBack = PlaneCreate(1, 3, 3, 1, 1, self.gizmoDiskPlaneZ)
-        ObjectRotate(self.gizmoDiskPlaneZBack, 180, 0, 0)
-        ObjectHide(self.gizmoDiskPlaneZ)
-        
         self.gizmoDiskX = DiskCreate(0.9, 1.0, 0.0, 360.0, 1, 32, self.gizmoRotation)
         ObjectRotate(self.gizmoDiskX, 0, -90, 0)
         ObjectSetMaterial(self.gizmoDiskX, 'gizmoRed')
@@ -678,18 +658,15 @@ class EditorApplication(Framework):
         self.previousMouseY = self.mouseY
         if button == MB_LEFT:
             if self.selectedObject != None:
-                ObjectShow(self.gizmoDiskPlaneX)
-                ObjectShow(self.gizmoDiskPlaneY)
-                ObjectShow(self.gizmoDiskPlaneZ)
                 MaterialLibraryActivate(self.internalMatlib)
                 obj = ObjectSceneRaycast(self.mouseRay, self.gizmo);
-                if obj == self.gizmoAxisX or obj == self.gizmoArrowX or obj == self.gizmoDiskPlaneX or obj == self.gizmoDiskPlaneXBack:
+                if obj == self.gizmoAxisX or obj == self.gizmoArrowX or obj == self.gizmoDiskX:
                     self.dragAxis = 0
                     MaterialSetDiffuseColor('gizmoRed', c_white, 1.0)
-                elif obj == self.gizmoAxisY or obj == self.gizmoArrowY or obj == self.gizmoDiskPlaneY or obj == self.gizmoDiskPlaneYBack:
+                elif obj == self.gizmoAxisY or obj == self.gizmoArrowY or obj == self.gizmoDiskY:
                     self.dragAxis = 1
                     MaterialSetDiffuseColor('gizmoGreen', c_white, 1.0)
-                elif obj == self.gizmoAxisZ or obj == self.gizmoArrowZ or obj == self.gizmoDiskPlaneZ or obj == self.gizmoDiskPlaneZBack:
+                elif obj == self.gizmoAxisZ or obj == self.gizmoArrowZ or obj == self.gizmoDiskZ:
                     self.dragAxis = 2
                     MaterialSetDiffuseColor('gizmoBlue', c_white, 1.0)
                 else:
@@ -699,9 +676,6 @@ class EditorApplication(Framework):
                     MaterialSetDiffuseColor('gizmoBlue', c_blue, 1.0)
                     self.unselectObjects()
                 MaterialLibraryActivate(self.matlib)
-                ObjectHide(self.gizmoDiskPlaneX)
-                ObjectHide(self.gizmoDiskPlaneY)
-                ObjectHide(self.gizmoDiskPlaneZ)
             
                 self.startDrag()
         
@@ -818,8 +792,10 @@ class EditorApplication(Framework):
                     move = vdot(vDelta, (self.dirx, self.diry, self.dirz))
                     ObjectMove(id, move)
             elif self.transformationMode == 1:
-                #TODO: rotate by self.dragAxis
-                pass
+                if self.dragAxis == 1:
+                    #turn = math.atan2()
+                    #ObjectTurn(id, turn)
+                    pass
                 
             self.updateBoundingBox(self.selectedObject)
     
